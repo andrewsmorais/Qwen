@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Pricing } from "@/components/Pricing";
 import { Header } from "@/components/Header";
+import { CRM_URL } from "@/lib/urls";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -295,7 +296,7 @@ export default function Home() {
                 </ul>
                 
                 <div className="mt-10">
-                  <Link href="/app" className="text-indigo-600 font-semibold hover:text-indigo-700 flex items-center gap-2 transition-colors">
+                  <Link href={CRM_URL} className="text-indigo-600 font-semibold hover:text-indigo-700 flex items-center gap-2 transition-colors">
                     Conheça todas as funcionalidades <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -405,7 +406,7 @@ export default function Home() {
                   <p className="text-sm md:text-base text-slate-500 leading-relaxed mb-6">
                     Pronto! Conecte seu número de WhatsApp e veja a mágica acontecer. Acompanhe todas as conversas em tempo real pelo painel CRM.
                   </p>
-                  <Link href="/app" className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-lg shadow-indigo-600/20">
+                  <Link href={CRM_URL} className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-lg shadow-indigo-600/20">
                      Criar meu Agente
                   </Link>
                </div>
@@ -725,3 +726,4 @@ export default function Home() {
     </div>
   );
 }
+

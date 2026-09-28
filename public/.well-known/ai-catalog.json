@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "name": "ChatAI Online",
+  "description": "CRM com IA para WhatsApp que transforma conversas em faturamento 24/7",
+  "homepage": "https://chataionline.io",
+  "capabilities": [
+    "customer-support",
+    "sales-automation",
+    "lead-qualification",
+    "appointment-scheduling",
+    "whatsapp-integration"
+  ],
+  "pricing": {
+    "currency": "BRL",
+    "plans": [
+      {
+        "name": "Essencial",
+        "price": 107,
+        "interval": "month"
+      },
+      {
+        "name": "Impulso",
+        "price": 159,
+        "interval": "month"
+      },
+      {
+        "name": "Escala",
+        "price": 234,
+        "interval": "month"
+      }
+    ],
+    "free_trial_days": 7
+  },
+  "contact": {
+    "email": "contato@chataionline.io",
+    "phone": "+5512991842793",
+    "whatsapp": "https://wa.me/5512991842793"
+  },
+  "company": {
+    "name": "Andrews Rocha De Morais",
+    "cnpj": "423.495.698/0001-88",
+    "address": "Avenida Marginal, 761, CEP 11687-147, Ubatuba/SP, Brasil"
+  },
+  "integrations": [
+    "shopify",
+    "nuvemshop",
+    "woocommerce",
+    "hotmart",
+    "kiwify",
+    "zapier",
+    "mercadopago"
+  ],
+  "documentation": {
+    "terms": "https://chataionline.io/termos",
+    "privacy": "https://chataionline.io/privacidade",
+    "cookies": "https://chataionline.io/cookies",
+    "refund": "https://chataionline.io/reembolso"
+  },
+  "updated_at": "2026-09-28T00:00:00Z"
+}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CreditCard, QrCode, FileText, Smartphone, Copy, Check, Loader2, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useRouter } from "next/navigation";
+import { CRM_URL } from "@/lib/urls";
 
 export type PaymentMethod = "PIX" | "BOLETO" | "CREDIT_CARD" | "DEBIT_CARD";
 
@@ -74,7 +75,7 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     setIsSuccess(true);
     // Redireciona para a área logada após 3 segundos
     setTimeout(() => {
-      router.push("/app");
+      window.location.href = CRM_URL;
     }, 3000);
   };
 
@@ -346,5 +347,6 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     </div>
   );
 }
+
 
 

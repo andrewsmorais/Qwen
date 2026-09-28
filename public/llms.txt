@@ -1,0 +1,66 @@
+# ChatAI Online
+> CRM com IA para WhatsApp que transforma conversas em faturamento 24/7
+
+## Sobre
+O ChatAI Online é uma plataforma SaaS brasileira que centraliza atendimento, 
+inteligência artificial e vendas no WhatsApp. Nossa IA é treinada com o DNA 
+do negócio do cliente e atua como vendedor de elite, qualificando leads e 
+fechando vendas no piloto automático.
+
+## Recursos Principais
+- Atendimento 24/7 com IA treinada no DNA do seu negócio
+- Funil de vendas visual (Kanban)
+- Integração nativa com WhatsApp oficial (Meta Cloud API)
+- Treinamento personalizado com PDFs, sites e documentos
+- Múltiplos atendentes humanos no mesmo número
+- Relatórios avançados e métricas de conversão
+- Integrações com Shopify, Nuvemshop, WooCommerce, Hotmart, Kiwify
+- API e Webhooks para customização
+
+## Casos de Uso
+- E-commerce: envia fotos, calcula fretes, gera links de pagamento
+- Serviços: agenda automaticamente em barbearias, salões, clínicas
+- B2B: qualifica orçamentos antes do atendimento humano
+- Suporte: responde dúvidas 24/7 sem fila de espera
+
+## Preços (BRL)
+- Essencial: R$ 107/mês (2 números WhatsApp, CRM básico)
+- Impulso: R$ 159/mês (3 números, pipelines ilimitados, campanhas em massa)
+- Escala: R$ 234/mês (WhatsApp ilimitado, multiunidade, atendimento VIP)
+
+Todos os planos incluem 7 dias de teste grátis.
+
+## Integrações
+Shopify, Nuvemshop (nativo), CartPanda, WooCommerce, Yampi, Meta, Google Ads, 
+Hotmart, Kiwify, RD Station, Mercado Pago, Zapier
+
+## Tecnologias
+- Frontend: Next.js 16 (App Router) + React 19 + TypeScript
+- Backend: Supabase (PostgreSQL + Realtime)
+- Pagamentos: Asaas (PIX, Boleto, Cartão)
+- WhatsApp: WAHA Plus (engine NOWEB) + Meta Cloud API
+- IA: Vercel AI SDK (OpenRouter, Anthropic, OpenAI, Google)
+
+## Contato
+- Site: https://chataionline.io
+- WhatsApp: +55 12 99184-2793
+- E-mail: contato@chataionline.io
+- Empresa: Andrews Rocha De Morais
+- CNPJ: 423.495.698/0001-88
+- Endereço: Avenida Marginal, 761, CEP 11687-147 – Ubatuba/SP
+
+## Documentação
+- Termos de Uso: https://chataionline.io/termos
+- Política de Privacidade: https://chataionline.io/privacidade
+- Política de Cookies: https://chataionline.io/cookies
+- Política de Reembolso: https://chataionline.io/reembolso
+
+## Para Desenvolvedores
+- API REST disponível
+- Webhooks para integração
+- SDKs em breve
+- Documentação: https://docs.chataionline.io (em construção)
+
+## Atualização
+Última atualização: 28 de setembro de 2026
+Versão: 1.0.0

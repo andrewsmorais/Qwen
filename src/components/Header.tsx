@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { CRM_URL } from "@/lib/urls";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,11 +26,11 @@ export function Header() {
           </nav>
         </div>
         <div className="hidden lg:flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2 rounded-full border border-slate-200 hover:border-indigo-300">
+          <Link href={CRM_URL} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2 rounded-full border border-slate-200 hover:border-indigo-300">
             Login
           </Link>
           <Link 
-            href="/app" 
+            href={CRM_URL} 
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md shadow-indigo-600/20"
           >
             Acessar CRM
@@ -78,14 +79,14 @@ export function Header() {
           </nav>
           <div className="flex flex-col gap-3 px-6 pb-6">
             <Link 
-              href="/login" 
+              href={CRM_URL} 
               onClick={() => setMenuOpen(false)}
               className="text-sm font-medium text-slate-600 text-center py-3 rounded-full border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
             >
               Login
             </Link>
             <Link 
-              href="/app" 
+              href={CRM_URL} 
               onClick={() => setMenuOpen(false)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3 rounded-full text-sm font-semibold transition-all shadow-md shadow-indigo-600/20"
             >
@@ -97,3 +98,4 @@ export function Header() {
     </header>
   );
 }
+
