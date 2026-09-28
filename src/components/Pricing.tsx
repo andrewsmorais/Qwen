@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { CheckoutModal } from "./checkout/CheckoutModal";
@@ -11,6 +11,16 @@ export function Pricing() {
   const [period, setPeriod] = useState<Period>('mensal');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<{ type: "essencial" | "impulso" | "escala"; value: number }>({ type: "impulso", value: 159 });
+  const [organizationId, setOrganizationId] = useState("org_loading");
+
+  useEffect(() => {
+    let id = sessionStorage.getItem("chatai_org_id");
+    if (!id) {
+      id = `org_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+      sessionStorage.setItem("chatai_org_id", id);
+    }
+    setOrganizationId(id);
+  }, []);
 
   const plans = [
     {
@@ -189,7 +199,7 @@ export function Pricing() {
                    
                    <button
                      onClick={() => {
-                        setSelectedPlan({ type: plan.name.toLowerCase() as any, value: monthlyPrice });
+                        setSelectedPlan({ type: plan.name.toLowerCase() as any, value: currentPrice });
                         setIsModalOpen(true);
                      }}
                      className={`w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block
@@ -229,7 +239,7 @@ export function Pricing() {
       <CheckoutModal
          isOpen={isModalOpen}
          onClose={() => setIsModalOpen(false)}
-         organizationId={`org_${Math.random().toString(36).substring(7)}`}
+         organizationId={organizationId}
          planType={selectedPlan.type}
          planValue={selectedPlan.value}
       />

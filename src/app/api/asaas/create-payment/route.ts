@@ -3,6 +3,12 @@ import { createSupabaseAdmin } from "@/lib/supabase";
 import { findOrCreateCustomer, createPayment, getPixQrCode } from "@/lib/asaas/client";
 import type { CreatePaymentRequest, BillingType } from "@/lib/asaas/types";
 
+const PLAN_PRICES = {
+  essencial: { mensal: 107, trimestral: 97, anual: 86 },
+  impulso: { mensal: 159, trimestral: 143, anual: 127 },
+  escala: { mensal: 234, trimestral: 211, anual: 187 }
+};
+
 // Validação simples de CPF/CNPJ (formato)
 function isValidCpfCnpj(value: string): boolean {
   const cleaned = value.replace(/\D/g, "");
@@ -16,6 +22,20 @@ export async function POST(req: NextRequest) {
     // ── Validações ──
     if (!body.organization_id || !body.customer_name || !body.customer_email || !body.customer_cpf_cnpj || !body.value || !body.plan_type || !body.billing_type) {
       return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
+    }
+
+    const validPrices = PLAN_PRICES[body.plan_type as keyof typeof PLAN_PRICES];
+    if (!validPrices) {
+      return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
+    }
+
+    // Calcula o preço correto baseado no valor enviado para inferir o período
+    // Assume mensal por padrão
+    let correctPrice = validPrices.mensal;
+    if (body.value === validPrices.anual * 12) {
+      correctPrice = validPrices.anual * 12;
+    } else if (body.value === validPrices.trimestral * 3) {
+      correctPrice = validPrices.trimestral * 3;
     }
 
     if (!isValidCpfCnpj(body.customer_cpf_cnpj)) {
@@ -43,7 +63,7 @@ export async function POST(req: NextRequest) {
     const paymentPayload: Record<string, unknown> = {
       customer: customer.id,
       billingType: body.billing_type,
-      value: body.value,
+      value: correctPrice,
       description: `Assinatura Plano ${body.plan_type.charAt(0).toUpperCase() + body.plan_type.slice(1)} - ChatAI Online`,
       externalReference: body.organization_id,
     };

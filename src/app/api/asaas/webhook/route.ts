@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase";
 import type { AsaasWebhookEvent, SubscriptionStatus } from "@/lib/asaas/types";
+import crypto from "crypto";
+
+function validateAsaasToken(req: NextRequest): boolean {
+  const secret = process.env.ASAAS_WEBHOOK_SECRET;
+  const token = req.headers.get("asaas-access-token");
+  if (!secret || !token) return false;
+  const a = Buffer.from(token);
+  const b = Buffer.from(secret);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const event: AsaasWebhookEvent = await req.json();
+    if (!validateAsaasToken(req)) {
+      console.error("[Webhook] Invalid token detected");
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const rawBody = await req.text();
+    const event: AsaasWebhookEvent = JSON.parse(rawBody);
 
     console.log("[Webhook] Event received:", event.event, "Payment:", event.payment?.id);
 

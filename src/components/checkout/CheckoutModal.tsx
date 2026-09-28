@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { CreditCard, QrCode, FileText, Smartphone, Copy, Check, Loader2, X } from "lucide-react";
@@ -28,7 +28,10 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
   const [customerForm, setCustomerForm] = useState({
     name: "",
     email: "",
-    cpfCnpj: ""
+    cpfCnpj: "",
+    phone: "",
+    postalCode: "",
+    addressNumber: ""
   });
 
   // PIX States
@@ -94,14 +97,22 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
       let creditCardToken = undefined;
 
       // Validações básicas de usuário
-      if (!customerForm.name || !customerForm.email || !customerForm.cpfCnpj) {
-        throw new Error("Por favor, preencha seus dados pessoais (Nome, Email e CPF/CNPJ)");
+      const phoneDigits = customerForm.phone.replace(/\D/g, "");
+      if (!customerForm.name || !customerForm.email || !customerForm.cpfCnpj || !customerForm.phone) {
+        throw new Error("Por favor, preencha seus dados pessoais (Nome, Email, CPF/CNPJ e Celular)");
+      }
+      if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+        throw new Error("Por favor, informe um número de celular válido com DDD.");
       }
 
       // Se for cartão, tokeniza antes
       if (method === "CREDIT_CARD" || method === "DEBIT_CARD") {
         if (!cardForm.number || !cardForm.name || !cardForm.expiry || !cardForm.cvv) {
           throw new Error("Por favor, preencha todos os dados do cartão de crédito.");
+        }
+        const cepDigits = customerForm.postalCode.replace(/\D/g, "");
+        if (cepDigits.length !== 8 || !customerForm.addressNumber) {
+          throw new Error("Para pagamentos com cartão, o CEP e Número do endereço são obrigatórios.");
         }
         
         const [month, year] = cardForm.expiry.split("/");
@@ -110,7 +121,12 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            customer_id: "cus_000000", // MOCK (ideal: criar cliente no backend e enviar id)
+            customer: {
+              name: customerForm.name,
+              email: customerForm.email,
+              cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
+              phone: phoneDigits
+            },
             holder_name: cardForm.name,
             card_number: cardForm.number,
             expiry_month: month,
@@ -119,10 +135,10 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
             holder_info: {
               name: customerForm.name,
               email: customerForm.email,
-              cpfCnpj: customerForm.cpfCnpj,
-              postalCode: "00000000",
-              addressNumber: "0",
-              phone: "11999999999"
+              cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
+              postalCode: cepDigits,
+              addressNumber: customerForm.addressNumber,
+              phone: phoneDigits
             }
           })
         });
@@ -223,16 +239,32 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
                     <label className="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
                     <input type="text" required value={customerForm.name} onChange={e => setCustomerForm({...customerForm, name: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                       <input type="email" required value={customerForm.email} onChange={e => setCustomerForm({...customerForm, email: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">CPF ou CNPJ</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">CPF/CNPJ</label>
                       <input type="text" required value={customerForm.cpfCnpj} onChange={e => setCustomerForm({...customerForm, cpfCnpj: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Celular</label>
+                      <input type="text" placeholder="(12) 99999-9999" required value={customerForm.phone} onChange={e => setCustomerForm({...customerForm, phone: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                    </div>
                   </div>
+                  {(method === "CREDIT_CARD" || method === "DEBIT_CARD") && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">CEP</label>
+                        <input type="text" required value={customerForm.postalCode} onChange={e => setCustomerForm({...customerForm, postalCode: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Número do endereço</label>
+                        <input type="text" required value={customerForm.addressNumber} onChange={e => setCustomerForm({...customerForm, addressNumber: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -314,3 +346,5 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     </div>
   );
 }
+
+

@@ -24,6 +24,102 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ChatAI Online",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "CRM com IA para WhatsApp que atende clientes 24/7, qualifica leads e fecha vendas automaticamente",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "BRL",
+      "lowPrice": "107",
+      "highPrice": "234",
+      "offerCount": "3",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Essencial",
+          "price": "107",
+          "priceCurrency": "BRL"
+        },
+        {
+          "@type": "Offer",
+          "name": "Impulso",
+          "price": "159",
+          "priceCurrency": "BRL"
+        },
+        {
+          "@type": "Offer",
+          "name": "Escala",
+          "price": "234",
+          "priceCurrency": "BRL"
+        }
+      ]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "127"
+    }
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "A IA substitui minha equipe de vendas?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Embora seja possível, recomendamos usar a IA para otimizar o atendimento, sem substituir o toque humano. O equilíbrio entre a inteligência artificial e sua equipe geralmente traz os melhores resultados."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "É complicado treinar a Inteligência Artificial?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Treine sua IA em minutos. O processo é feito de forma simples e natural, como se você estivesse ensinando um colega de trabalho, sem precisar de configurações manuais complexas."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Vocês ajudam na configuração da plataforma?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim! Oferecemos suporte para ajudar na implementação, desde o treinamento da IA até a estruturação dos seus fluxos de atendimento e integração com suas ferramentas atuais."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Preciso ter conhecimento técnico ou saber programar?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Definitivamente não. Nossa plataforma é totalmente visual e intuitiva. Além disso, nossa equipe está sempre disponível para te ajudar em qualquer etapa da configuração."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "A IA funciona para processos de vendas mais complexos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim, a IA aprende com seus materiais (site, PDFs, FAQs) e se adapta ao seu negócio. Para vendas muito complexas, ela pode atuar qualificando o lead e agendando para um humano finalizar."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O Agente consegue atender em outros idiomas?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Com certeza. Nossos agentes de IA conseguem se comunicar e vender em mais de 50 idiomas nativamente."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-500/30">
       {/* HEADER */}
@@ -602,7 +698,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Button */}
       <a 
-         href="https://wa.me/" 
+         href="https://wa.me/5512991842793?text=Ol%C3%A1!%20Vi%20o%20site%20do%20ChatAI%20Online%20e%20quero%20saber%20mais!" 
          target="_blank" 
          rel="noopener noreferrer" 
          className="fixed bottom-6 right-6 z-[999] group flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform"
@@ -617,6 +713,15 @@ export default function Home() {
             2
          </span>
       </a>
+      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
     </div>
   );
 }

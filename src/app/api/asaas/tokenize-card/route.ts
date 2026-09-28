@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { tokenizeCreditCard } from "@/lib/asaas/client";
+import { tokenizeCreditCard, findOrCreateCustomer } from "@/lib/asaas/client";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { customer_id, holder_name, card_number, expiry_month, expiry_year, ccv, holder_info } = body;
+    let { customer_id, customer, holder_name, card_number, expiry_month, expiry_year, ccv, holder_info } = body;
+
+    // Se não temos um customer_id explícito mas temos o objeto customer, buscamos ou criamos no Asaas
+    if (!customer_id && customer) {
+      if (!customer.name || !customer.email || !customer.cpfCnpj) {
+         return NextResponse.json({ error: "Dados do cliente incompletos" }, { status: 400 });
+      }
+      const asaasCustomer = await findOrCreateCustomer({
+         name: customer.name,
+         email: customer.email,
+         cpfCnpj: customer.cpfCnpj.replace(/\D/g, ""),
+         phone: customer.phone ? customer.phone.replace(/\D/g, "") : undefined,
+      });
+      customer_id = asaasCustomer.id;
+    }
 
     // Validações básicas
     if (!customer_id || !holder_name || !card_number || !expiry_month || !expiry_year || !ccv) {
@@ -37,7 +51,7 @@ export async function POST(req: NextRequest) {
         ccv: ccv,
       },
       creditCardHolderInfo: {
-        name: holder_name,
+        name: holder_info.name || holder_name,
         email: holder_info.email,
         cpfCnpj: holder_info.cpfCnpj.replace(/\D/g, ""),
         postalCode: holder_info.postalCode.replace(/\D/g, ""),
