@@ -1,27 +1,64 @@
-﻿"use client";
+"use client";
 
-import { useState, useEffect } from "react";
-import { CreditCard, QrCode, FileText, Smartphone, Copy, Check, Loader2, X } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import {
+  CreditCard,
+  QrCode,
+  FileText,
+  Smartphone,
+  Check,
+  Loader2,
+  X,
+} from "lucide-react";
 import { CRM_URL } from "@/lib/urls";
+import { createSupabaseClient } from "@/lib/supabase";
+import { PLANOS, selecionarPlano, type Plano, type Ciclo } from "@/lib/planos";
+
+const moeda = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+const nomeDoCiclo: Record<Ciclo, string> = {
+  monthly: "mês",
+  quarterly: "trimestre",
+  yearly: "ano",
+};
 
 export type PaymentMethod = "PIX" | "BOLETO" | "CREDIT_CARD" | "DEBIT_CARD";
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  organizationId: string; // Vai ser injetado pelo componente que chama
-  planType: "essencial" | "impulso" | "escala";
-  planValue: number;
+  organizationId?: string | null;
+  planType: Plano;
+  billingCycle: Ciclo;
+  attendants?: number;
 }
 
-export function CheckoutModal({ isOpen, onClose, organizationId, planType, planValue }: CheckoutModalProps) {
-  const router = useRouter();
+export function CheckoutModal({
+  isOpen,
+  onClose,
+  organizationId,
+  planType,
+  billingCycle,
+  attendants,
+}: CheckoutModalProps) {
   const [method, setMethod] = useState<PaymentMethod>("CREDIT_CARD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [attendantCount, setAttendantCount] = useState(
+    String(attendants ?? PLANOS[planType].min_attendants),
+  );
+  const [paymentSessionToken, setPaymentSessionToken] = useState<string | null>(
+    null,
+  );
+  let selecao: ReturnType<typeof selecionarPlano> | null = null;
+  try {
+    selecao = selecionarPlano(planType, billingCycle, Number(attendantCount));
+  } catch {
+    /* O formulário mostra a quantidade inválida antes de enviar. */
+  }
+
   // Sucesso
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -32,15 +69,15 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     cpfCnpj: "",
     phone: "",
     postalCode: "",
-    addressNumber: ""
+    addressNumber: "",
+    password: "",
+    confirmPassword: "",
   });
 
   // PIX States
-  const [pixData, setPixData] = useState<{ qrCode: string; payload: string; paymentId: string } | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  // Boleto States
-  const [boletoData, setBoletoData] = useState<{ url: string; paymentId: string } | null>(null);
+  const [pixData, setPixData] = useState<{ paymentId: string | null } | null>(
+    null,
+  );
 
   // Card States
   const [cardForm, setCardForm] = useState({
@@ -48,46 +85,55 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     name: "",
     expiry: "",
     cvv: "",
-    installments: 1
+    installments: 1,
   });
 
-  useEffect(() => {
-    // Polling para PIX (Caso o usuário pague na hora, mesmo em trial)
-    let interval: NodeJS.Timeout;
-    if (pixData?.paymentId) {
-      interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/asaas/check-payment/${pixData.paymentId}`);
-          const data = await res.json();
-          if (data.asaas_status === "RECEIVED" || data.asaas_status === "CONFIRMED") {
-            clearInterval(interval);
-            handleSuccess();
-          }
-        } catch (err) {
-          console.error("Polling error", err);
-        }
-      }, 5000);
-    }
-    return () => clearInterval(interval);
-  }, [pixData]);
-
-  const handleSuccess = () => {
+  const handleSuccess = useCallback(() => {
     setIsSuccess(true);
-    // Redireciona para a área logada após 3 segundos
     setTimeout(() => {
-      window.location.href = CRM_URL;
+      const destino = new URL("/login?next=%2Fonboarding", CRM_URL);
+      window.location.assign(destino.href);
     }, 3000);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Consultas de pagamento exigem uma sessão e uma cobrança real.
+    const paymentId = pixData?.paymentId;
+    if (!isOpen || !paymentId?.startsWith("pay_") || !paymentSessionToken)
+      return;
+    const controller = new AbortController();
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/asaas/check-payment/${encodeURIComponent(paymentId)}`,
+          {
+            headers: { Authorization: `Bearer ${paymentSessionToken}` },
+            signal: controller.signal,
+          },
+        );
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) clearInterval(interval);
+          return;
+        }
+        const data = await res.json();
+        if (
+          data.asaas_status === "RECEIVED" ||
+          data.asaas_status === "CONFIRMED"
+        ) {
+          clearInterval(interval);
+          handleSuccess();
+        }
+      } catch {
+        /* A falha de consulta não repete o checkout. */
+      }
+    }, 5000);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, [isOpen, pixData?.paymentId, paymentSessionToken, handleSuccess]);
 
   if (!isOpen) return null;
-
-  const handleCopyPix = () => {
-    if (pixData?.payload) {
-      navigator.clipboard.writeText(pixData.payload);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,29 +141,71 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
     setError(null);
 
     try {
+      // Conferir plano e quantidade antes de qualquer tokenização ou cobrança.
+      const selecaoDoPedido = selecionarPlano(
+        planType,
+        billingCycle,
+        Number(attendantCount),
+      );
+      if (method === "DEBIT_CARD")
+        throw new Error(
+          "Débito indisponível para assinaturas. Selecione outra forma de pagamento.",
+        );
       let creditCardToken = undefined;
 
       // Validações básicas de usuário
       const phoneDigits = customerForm.phone.replace(/\D/g, "");
-      if (!customerForm.name || !customerForm.email || !customerForm.cpfCnpj || !customerForm.phone) {
-        throw new Error("Por favor, preencha seus dados pessoais (Nome, Email, CPF/CNPJ e Celular)");
+      if (
+        !customerForm.name ||
+        !customerForm.email ||
+        !customerForm.cpfCnpj ||
+        !customerForm.phone
+      ) {
+        throw new Error(
+          "Por favor, preencha seus dados pessoais (Nome, Email, CPF/CNPJ e Celular)",
+        );
       }
       if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-        throw new Error("Por favor, informe um número de celular válido com DDD.");
+        throw new Error(
+          "Por favor, informe um número de celular válido com DDD.",
+        );
+      }
+
+      // Validação de senha para novos cadastros (onboarding self-service)
+      if (!organizationId) {
+        if (!customerForm.password || customerForm.password.length < 8) {
+          throw new Error(
+            "Por favor, defina uma senha de acesso com no mínimo 8 caracteres.",
+          );
+        }
+        if (customerForm.password !== customerForm.confirmPassword) {
+          throw new Error(
+            "As senhas informadas não coincidem. Verifique a digitação.",
+          );
+        }
       }
 
       // Se for cartão, tokeniza antes
-      if (method === "CREDIT_CARD" || method === "DEBIT_CARD") {
-        if (!cardForm.number || !cardForm.name || !cardForm.expiry || !cardForm.cvv) {
-          throw new Error("Por favor, preencha todos os dados do cartão de crédito.");
+      if (method === "CREDIT_CARD") {
+        if (
+          !cardForm.number ||
+          !cardForm.name ||
+          !cardForm.expiry ||
+          !cardForm.cvv
+        ) {
+          throw new Error(
+            "Por favor, preencha todos os dados do cartão de crédito.",
+          );
         }
         const cepDigits = customerForm.postalCode.replace(/\D/g, "");
         if (cepDigits.length !== 8 || !customerForm.addressNumber) {
-          throw new Error("Para pagamentos com cartão, o CEP e Número do endereço são obrigatórios.");
+          throw new Error(
+            "Para pagamentos com cartão, o CEP e Número do endereço são obrigatórios.",
+          );
         }
-        
+
         const [month, year] = cardForm.expiry.split("/");
-        
+
         const tokenRes = await fetch("/api/asaas/tokenize-card", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -126,7 +214,7 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
               name: customerForm.name,
               email: customerForm.email,
               cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
-              phone: phoneDigits
+              phone: phoneDigits,
             },
             holder_name: cardForm.name,
             card_number: cardForm.number,
@@ -139,56 +227,86 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
               cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
               postalCode: cepDigits,
               addressNumber: customerForm.addressNumber,
-              phone: phoneDigits
-            }
-          })
+              phone: phoneDigits,
+            },
+          }),
         });
-        
+
         const tokenData = await tokenRes.json();
         if (!tokenData.success) throw new Error(tokenData.error);
         creditCardToken = tokenData.creditCardToken;
       }
 
-      // Cria a cobrança com status Trial
+      // Headers com autorização de sessão (caso usuário já esteja autenticado no Supabase)
+      const reqHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      try {
+        const supabase = createSupabaseClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          reqHeaders["Authorization"] = `Bearer ${session.access_token}`;
+        }
+      } catch {
+        // Sem sessão ativa no momento da requisição
+      }
+      setPaymentSessionToken(
+        reqHeaders.Authorization?.replace(/^Bearer\s+/i, "") ?? null,
+      );
+
+      // Cria a cobrança com status Trial ou Pending
       const payRes = await fetch("/api/asaas/create-payment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: reqHeaders,
         body: JSON.stringify({
-          organization_id: organizationId,
-          customer_name: customerForm.name,
-          customer_email: customerForm.email,
-          customer_cpf_cnpj: customerForm.cpfCnpj,
-          value: planValue,
-          plan_type: planType,
+          organization_id: organizationId || undefined,
+          plan_slug: planType,
+          billing_cycle: billingCycle,
+          attendants: selecaoDoPedido.seats,
+          customer: {
+            name: customerForm.name,
+            email: customerForm.email,
+            cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
+            phone: phoneDigits,
+            postalCode:
+              (customerForm.postalCode || "").replace(/\D/g, "") || undefined,
+            addressNumber: customerForm.addressNumber || undefined,
+          },
+          password: customerForm.password || undefined,
           billing_type: method,
           credit_card_token: creditCardToken,
-          installment_count: cardForm.installments
-        })
+          installment_count: cardForm.installments,
+        }),
       });
 
       const payData = await payRes.json();
-      if (!payData.success) throw new Error(payData.error);
+      if (!payRes.ok || (!payData.success && !payData.ok)) {
+        throw new Error(payData.error || "Erro ao processar assinatura");
+      }
 
       if (method === "PIX") {
         setPixData({
-          qrCode: payData.pixQrCode,
-          payload: payData.pixPayload,
-          paymentId: payData.payment_id
+          paymentId:
+            typeof payData.payment_id === "string" &&
+            payData.payment_id.startsWith("pay_")
+              ? payData.payment_id
+              : null,
         });
         handleSuccess(); // PIX e BOLETO também são liberados imediatamente no modo Trial
       } else if (method === "BOLETO") {
-        setBoletoData({
-          url: payData.boletoUrl,
-          paymentId: payData.payment_id
-        });
         handleSuccess(); // PIX e BOLETO também são liberados imediatamente no modo Trial
       } else {
         // Cartão aprovado e agendado
         handleSuccess();
       }
-
-    } catch (err: any) {
-      setError(err.message || "Erro ao processar. Verifique os dados inseridos.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro ao processar. Verifique os dados inseridos.",
+      );
     } finally {
       setLoading(false);
     }
@@ -197,7 +315,10 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative scrollbar-hide">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+        >
           <X className="w-6 h-6" />
         </button>
 
@@ -206,8 +327,13 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
               <Check className="w-10 h-10" />
             </div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Teste grátis de 7 dias ativado!</h2>
-            <p className="text-slate-600 mb-8 text-lg">Sua conta foi criada e liberada. Você já pode usar a plataforma.</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              Teste grátis de 7 dias ativado!
+            </h2>
+            <p className="text-slate-600 mb-8 text-lg">
+              Seu plano foi registrado. Entre no CRM com o e-mail e a senha da
+              sua conta para configurar seu agente.
+            </p>
             <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
               <Loader2 className="w-5 h-5 animate-spin" />
               Redirecionando para o CRM...
@@ -216,10 +342,14 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
         ) : (
           <div className="p-8">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Comece seu Teste Grátis</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Comece seu Teste Grátis
+              </h2>
               <div className="flex items-center justify-between">
-                 <p className="text-slate-500">Plano {planType.charAt(0).toUpperCase() + planType.slice(1)}</p>
-                 <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">7 Dias Grátis</span>
+                <p className="text-slate-500">Plano {PLANOS[planType].name}</p>
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+                  7 Dias Grátis
+                </span>
               </div>
             </div>
 
@@ -231,38 +361,190 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
 
             {/* FORMULÁRIO COMPLETO */}
             <form onSubmit={handleCheckout}>
-              
+              <div className="mb-8">
+                <label
+                  htmlFor="checkout-attendants"
+                  className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                  Quantidade de atendentes humanos
+                </label>
+                <input
+                  id="checkout-attendants"
+                  type="number"
+                  required
+                  min={PLANOS[planType].min_attendants}
+                  max={1000}
+                  step={1}
+                  value={attendantCount}
+                  disabled={loading}
+                  onChange={(e) => setAttendantCount(e.target.value)}
+                  aria-describedby="checkout-plan-summary"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                />
+                <p
+                  id="checkout-plan-summary"
+                  className="text-sm text-slate-500 mt-2"
+                  aria-live="polite"
+                >
+                  Mínimo de {PLANOS[planType].min_attendants} atendentes.{" "}
+                  {selecao
+                    ? `Total para ${selecao.seats} atendentes: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
+                    : "Informe uma quantidade inteira válida para conferir o total."}
+                </p>
+              </div>
+
               {/* DADOS PESSOAIS */}
               <div className="mb-8">
-                <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Seus Dados</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">
+                  Seus Dados
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
-                    <input type="text" required value={customerForm.name} onChange={e => setCustomerForm({...customerForm, name: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Nome Completo
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customerForm.name}
+                      onChange={(e) =>
+                        setCustomerForm({
+                          ...customerForm,
+                          name: e.target.value,
+                        })
+                      }
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                      <input type="email" required value={customerForm.email} onChange={e => setCustomerForm({...customerForm, email: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={customerForm.email}
+                        onChange={(e) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            email: e.target.value,
+                          })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">CPF/CNPJ</label>
-                      <input type="text" required value={customerForm.cpfCnpj} onChange={e => setCustomerForm({...customerForm, cpfCnpj: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        CPF/CNPJ
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={customerForm.cpfCnpj}
+                        onChange={(e) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            cpfCnpj: e.target.value,
+                          })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Celular</label>
-                      <input type="text" placeholder="(12) 99999-9999" required value={customerForm.phone} onChange={e => setCustomerForm({...customerForm, phone: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Celular
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="(12) 99999-9999"
+                        required
+                        value={customerForm.phone}
+                        onChange={(e) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            phone: e.target.value,
+                          })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                      />
                     </div>
                   </div>
-                  {(method === "CREDIT_CARD" || method === "DEBIT_CARD") && (
+                  {method === "CREDIT_CARD" && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">CEP</label>
-                        <input type="text" required value={customerForm.postalCode} onChange={e => setCustomerForm({...customerForm, postalCode: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          CEP
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={customerForm.postalCode}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              postalCode: e.target.value,
+                            })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Número do endereço</label>
-                        <input type="text" required value={customerForm.addressNumber} onChange={e => setCustomerForm({...customerForm, addressNumber: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Número do endereço
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={customerForm.addressNumber}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              addressNumber: e.target.value,
+                            })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!organizationId && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Crie sua Senha de Acesso
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="Mínimo 8 caracteres"
+                          value={customerForm.password}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              password: e.target.value,
+                            })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Confirme sua Senha
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="Repita a senha"
+                          value={customerForm.confirmPassword}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              confirmPassword: e.target.value,
+                            })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all text-sm"
+                        />
                       </div>
                     </div>
                   )}
@@ -271,82 +553,144 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
 
               {/* MÉTODOS DE PAGAMENTO */}
               <div className="mb-8 border-t border-slate-100 pt-8">
-                 <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Forma de Pagamento</h3>
-                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                   {[
-                     { id: "CREDIT_CARD", icon: CreditCard, label: "Crédito" },
-                     { id: "PIX", icon: QrCode, label: "PIX" },
-                     { id: "BOLETO", icon: FileText, label: "Boleto" },
-                     { id: "DEBIT_CARD", icon: Smartphone, label: "Débito" }
-                   ].map(opt => (
-                     <button
-                       key={opt.id} type="button"
-                       onClick={() => setMethod(opt.id as PaymentMethod)}
-                       className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${
-                         method === opt.id 
-                         ? "border-indigo-600 bg-indigo-50 text-indigo-700" 
-                         : "border-slate-200 hover:border-indigo-300 text-slate-600"
-                       }`}
-                     >
-                       <opt.icon className="w-6 h-6 mb-2" />
-                       <span className="text-sm font-semibold">{opt.label}</span>
-                     </button>
-                   ))}
-                 </div>
+                <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">
+                  Forma de Pagamento
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { id: "CREDIT_CARD", icon: CreditCard, label: "Crédito" },
+                    { id: "PIX", icon: QrCode, label: "PIX" },
+                    { id: "BOLETO", icon: FileText, label: "Boleto" },
+                    { id: "DEBIT_CARD", icon: Smartphone, label: "Débito" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={opt.id === "DEBIT_CARD" || loading}
+                      onClick={() => setMethod(opt.id as PaymentMethod)}
+                      className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${
+                        method === opt.id
+                          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                          : "border-slate-200 hover:border-indigo-300 text-slate-600"
+                      }`}
+                    >
+                      <opt.icon className="w-6 h-6 mb-2" />
+                      <span className="text-sm font-semibold">{opt.label}</span>
+                      {opt.id === "DEBIT_CARD" && (
+                        <span className="text-xs mt-1">
+                          Indisponível para assinaturas
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
 
                 {/* INFO DE AGENDAMENTO (IMPORTANTE PARA O TRIAL) */}
-                {(method === "CREDIT_CARD" || method === "DEBIT_CARD") && (
-                   <div className="bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm p-4 rounded-xl mb-6">
-                      <strong>Aviso importante:</strong> Seu cartão <strong>NÃO</strong> será cobrado hoje. A cobrança de R$ {planValue.toFixed(2)} ocorrerá apenas após o fim do seu período de teste grátis (7 dias). Você pode cancelar a qualquer momento antes disso.
-                   </div>
+                {method === "CREDIT_CARD" && selecao && (
+                  <div className="bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm p-4 rounded-xl mb-6">
+                    <strong>Aviso importante:</strong> Seu cartão{" "}
+                    <strong>NÃO</strong> será cobrado hoje. A cobrança de{" "}
+                    {moeda.format(selecao.value)} por{" "}
+                    {nomeDoCiclo[billingCycle]}, para {selecao.seats}{" "}
+                    atendentes, ocorrerá apenas após o fim do seu período de
+                    teste grátis (7 dias). Você pode cancelar a qualquer momento
+                    antes disso.
+                  </div>
                 )}
-                {(method === "PIX" || method === "BOLETO") && (
-                   <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
-                      <strong>Aviso importante:</strong> Para validar o cadastro via PIX ou Boleto, será gerada uma fatura agora, mas seu <strong>acesso de teste de 7 dias será liberado imediatamente</strong>. Você pode pagar a fatura em até 7 dias para não ter o acesso interrompido.
-                   </div>
+                {(method === "PIX" || method === "BOLETO") && selecao && (
+                  <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
+                    <strong>Aviso importante:</strong> Será gerada uma fatura de{" "}
+                    {moeda.format(selecao.value)} por{" "}
+                    {nomeDoCiclo[billingCycle]}, para {selecao.seats}{" "}
+                    atendentes, com vencimento após os 7 dias de teste grátis.
+                    Seu{" "}
+                    <strong>
+                      acesso de teste será liberado após a confirmação do
+                      cadastro
+                    </strong>
+                    . Pague até o vencimento para continuar usando seu plano.
+                  </div>
                 )}
 
-                 {/* DADOS DO CARTÃO */}
-                 {(method === "CREDIT_CARD" || method === "DEBIT_CARD") && (
-                   <div className="space-y-4">
-                     <div>
-                       <label className="block text-sm font-medium text-slate-700 mb-1">Número do Cartão</label>
-                       <input type="text" placeholder="0000 0000 0000 0000" value={cardForm.number} onChange={e => setCardForm({...cardForm, number: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-slate-700 mb-1">Nome impresso no cartão</label>
-                       <input type="text" value={cardForm.name} onChange={e => setCardForm({...cardForm, name: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
-                     </div>
-                     <div className="grid grid-cols-2 gap-4">
-                       <div>
-                         <label className="block text-sm font-medium text-slate-700 mb-1">Validade (MM/AA)</label>
-                         <input type="text" placeholder="MM/AA" value={cardForm.expiry} onChange={e => setCardForm({...cardForm, expiry: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
-                       </div>
-                       <div>
-                         <label className="block text-sm font-medium text-slate-700 mb-1">CVV</label>
-                         <input type="text" placeholder="123" maxLength={4} value={cardForm.cvv} onChange={e => setCardForm({...cardForm, cvv: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"/>
-                       </div>
-                     </div>
-                   </div>
-                 )}
+                {/* DADOS DO CARTÃO */}
+                {method === "CREDIT_CARD" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Número do Cartão
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="0000 0000 0000 0000"
+                        value={cardForm.number}
+                        onChange={(e) =>
+                          setCardForm({ ...cardForm, number: e.target.value })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Nome impresso no cartão
+                      </label>
+                      <input
+                        type="text"
+                        value={cardForm.name}
+                        onChange={(e) =>
+                          setCardForm({ ...cardForm, name: e.target.value })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Validade (MM/AA)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="MM/AA"
+                          value={cardForm.expiry}
+                          onChange={(e) =>
+                            setCardForm({ ...cardForm, expiry: e.target.value })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          CVV
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="123"
+                          maxLength={4}
+                          value={cardForm.cvv}
+                          onChange={(e) =>
+                            setCardForm({ ...cardForm, cvv: e.target.value })
+                          }
+                          className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 disabled:opacity-70"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                {loading ? "Processando e validando..." : "Começar 7 dias grátis"}
+                {loading
+                  ? "Processando e validando..."
+                  : "Começar 7 dias grátis"}
               </button>
             </form>
-
           </div>
         )}
       </div>
     </div>
   );
 }
-
-
-
