@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
@@ -30,10 +30,10 @@ export function Header() {
             Login
           </Link>
           <Link 
-            href={CRM_URL} 
+            href="#precos" 
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md shadow-indigo-600/20"
           >
-            Acessar CRM
+            Começar teste grátis
           </Link>
         </div>
         <button 
@@ -86,11 +86,11 @@ export function Header() {
               Login
             </Link>
             <Link 
-              href={CRM_URL} 
+              href="#precos" 
               onClick={() => setMenuOpen(false)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3 rounded-full text-sm font-semibold transition-all shadow-md shadow-indigo-600/20"
             >
-              Acessar CRM
+              Começar teste grátis
             </Link>
           </div>
         </div>
