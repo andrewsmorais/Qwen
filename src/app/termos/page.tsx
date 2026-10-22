@@ -47,15 +47,15 @@ export default function TermosPage() {
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">2. Estrutura de Preços, Planos e Faturamento</h2>
           <p><strong className="text-slate-900">2.1.</strong> O serviço é disponibilizado mediante os seguintes níveis de planos comerciais divulgados na página oficial:</p>
           <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
-            <li><strong className="text-slate-900 font-semibold">Plano Starter:</strong> Desenvolvido para autônomos e pequenas operações, contendo 1 conexão de WhatsApp, até 1 Agente de IA para atendimento, suporte via comunidade/tickets e limites base de tráfego de mensagens.</li>
-            <li><strong className="text-slate-900 font-semibold">Plano Pro (Mais Popular):</strong> Desenvolvido para empresas em expansão, contendo até 3 conexões de WhatsApp, múltiplos Agentes de IA customizados com base de conhecimento expandida, relatórios avançados de conversão e suporte prioritário.</li>
-            <li><strong className="text-slate-900 font-semibold">Plano Enterprise / Custom:</strong> Solução para alta volumetria, com múltiplas instâncias simultâneas, agentes ilimitados, maior capacidade computacional dedicada e suporte dedicado.</li>
+            <li><strong className="text-slate-900 font-semibold">Plano Essencial:</strong> Para quem atende sozinho: 1 atendente, 1 conexão de WhatsApp por QR code, 1 Agente de IA com base de conhecimento e uso de IA incluso dentro de uma franquia de uso justo.</li>
+            <li><strong className="text-slate-900 font-semibold">Plano Impulso:</strong> Para equipes, com contratação mínima de 3 atendentes: até 3 conexões de WhatsApp por QR code, até 3 Agentes de IA com fluxos e skills, distribuição automática de leads, API e webhooks.</li>
+            <li><strong className="text-slate-900 font-semibold">Plano Escala:</strong> Sob consulta, para operações com alto volume de contatos, com contratação mínima de 5 atendentes e conexão pela API oficial do WhatsApp (Meta), implantada pela CONTRATADA. As mensagens cobradas pela Meta são pagas pelo USUÁRIO diretamente à Meta.</li>
           </ul>
           <p>
-            <strong className="text-slate-900">2.2. Periodicidade e Faturamento:</strong> As contratações operam no modelo pré-pago (mensal ou anual). O acesso é liberado mediante confirmação do meio de pagamento (Pix, Cartão de Crédito ou Boleto Bancário).
+            <strong className="text-slate-900">2.2. Periodicidade e Faturamento:</strong> As contratações operam no modelo pré-pago (mensal, trimestral ou anual), com preço por atendente. O acesso é liberado mediante confirmação do meio de pagamento (Pix, Cartão de Crédito ou Boleto Bancário).
           </p>
           <p>
-            <strong className="text-slate-900">2.3. Renovação Automática:</strong> As assinaturas são renovadas de forma automática ao término de cada ciclo (30 dias para planos mensais ou 365 dias para anuais), sendo o valor debitado no método de pagamento cadastrado, salvo manifestação expressa de cancelamento antes da data de renovação.
+            <strong className="text-slate-900">2.3. Renovação Automática:</strong> As assinaturas são renovadas de forma automática ao término de cada ciclo (30 dias para planos mensais, 90 dias para trimestrais ou 365 dias para anuais), sendo o valor debitado no método de pagamento cadastrado, salvo manifestação expressa de cancelamento antes da data de renovação.
           </p>
           <p>
             <strong className="text-slate-900">2.4. Consumo de Recursos Computacionais e Tokens de IA:</strong> Planos com limites definidos de disparos ou consultas à IA utilizam cotas mensais. Caso o USUÁRIO atinja o teto estipulado para o ciclo, o serviço de IA poderá ter a velocidade limitada ou solicitar upgrade de plano.
@@ -63,7 +63,7 @@ export default function TermosPage() {
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">3. Conexões de WhatsApp e Responsabilidade de Terceiros</h2>
           <p>
-            <strong className="text-slate-900">3.1.</strong> O USUÁRIO conecta seus próprios números telefônicos à plataforma através do leitor de QR Code ou APIs de mensageria.
+            <strong className="text-slate-900">3.1.</strong> O USUÁRIO conecta seus próprios números telefônicos à plataforma através do leitor de QR Code ou APIs de mensageria. Nos planos Essencial e Impulso a conexão é feita por QR Code, no mesmo modelo do WhatsApp Web, e <strong className="text-slate-900">não é uma integração oficial da Meta</strong>. O USUÁRIO declara estar ciente de que esse tipo de conexão pode ser desconectado, restringido ou banido pelo WhatsApp a qualquer tempo, inclusive sem aviso. Para reduzir esse risco, a plataforma não oferece disparo de mensagens em massa nesses planos. A conexão pela API oficial está disponível no plano Escala.
           </p>
           <p>
             <strong className="text-slate-900">3.2. Isenção de Responsabilidade sobre Bloqueios:</strong> O ChatAI Online atua exclusivamente como intermediador tecnológico de automação. A CONTRATADA não possui qualquer vínculo corporativo com a Meta Platforms Inc. (WhatsApp). O USUÁRIO reconhece expressamente que práticas como o envio de spam, disparo em massa não solicitado, violação dos termos de serviço do WhatsApp ou aquisição de listas de contatos frias podem acarretar o banimento do número telefônico pela operadora da rede social, isentando o ChatAI Online de qualquer ônus, indenização ou ressarcimento decorrente de sanções aplicadas por terceiros.

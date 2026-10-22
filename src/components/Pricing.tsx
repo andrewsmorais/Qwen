@@ -10,7 +10,7 @@ type Period = 'mensal' | 'trimestral' | 'anual';
 export function Pricing() {
   const [period, setPeriod] = useState<Period>('mensal');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<{ type: "essencial" | "impulso" | "escala"; value: number }>({ type: "impulso", value: 159 });
+  const [selectedPlan, setSelectedPlan] = useState<{ type: "essencial" | "impulso" | "escala"; value: number; period: Period }>({ type: "essencial", value: 89.9, period: "mensal" });
   const [organizationId, setOrganizationId] = useState("org_loading");
 
   useEffect(() => {
@@ -22,75 +22,77 @@ export function Pricing() {
     setOrganizationId(id);
   }, []);
 
-  const plans = [
+  // Preços em centavos, por atendente por mês, no ciclo escolhido. Trimestral
+  // tem 10% de desconto e anual 20% sobre o mensal. Espelha a tabela `plans`
+  // do Supabase (atualizada em 22/10/2026), que é a fonte da verdade.
+  const plans: Array<{
+    slug: "essencial" | "impulso" | "escala";
+    name: string;
+    subtitle: string;
+    highlight?: boolean;
+    minAgents: number;
+    sobConsulta?: boolean;
+    pricesCents: Record<Period, number>;
+    featuresHeadline?: string;
+    features: string[];
+  }> = [
     {
+      slug: "essencial",
       name: "Essencial",
-      subtitle: "Organiza",
-      minAgents: 2,
-      prices: {
-        mensal: 107,
-        trimestral: 97,
-        anual: 86
-      },
+      subtitle: "Para quem atende sozinho",
+      minAgents: 1,
+      pricesCents: { mensal: 8990, trimestral: 8091, anual: 7192 },
       features: [
-        "2 Números de WhatsApp",
+        "1 número de WhatsApp (QR code)",
         "Caixa de entrada compartilhada",
-        "CRM Kanban",
-        "Chatbot visual",
-        "Agentes IA",
-        "Base de conhecimento",
-        "Webchat",
-        "Relatórios essenciais"
-      ]
+        "CRM Kanban com 1 funil",
+        "Agenda com agendamento feito pelo agente",
+        "1 agente de IA com base de conhecimento e memória",
+        "Entende texto, áudio e foto",
+        "Chatbot de menu",
+        "Passagem da IA para atendente humano",
+        "Radar de conversas, catálogo de produtos e importação de planilha",
+        "Uso de IA incluso, com uso justo",
+      ],
     },
     {
+      slug: "impulso",
       name: "Impulso",
-      subtitle: "Acelera",
+      subtitle: "Para equipes",
       highlight: true,
       minAgents: 3,
-      prices: {
-        mensal: 159,
-        trimestral: 143,
-        anual: 127
-      },
+      pricesCents: { mensal: 14990, trimestral: 13491, anual: 11992 },
       featuresHeadline: "Tudo do Essencial, mais:",
       features: [
-        "Até 3 Números de WhatsApp",
-        "5 pipelines de vendas",
-        "Chatbot avançado e Agendamento",
-        "Campanhas em massa",
+        "Até 3 números de WhatsApp (QR code)",
+        "5 funis de vendas",
+        "3 agentes de IA com fluxos visuais e skills",
         "Distribuição automática de leads",
-        "Agentes IA com processos",
-        "Skills para IA",
-        "API e Webhooks",
-        "Relatórios completos",
-        "Até 3 setores"
-      ]
+        "Agente que organiza o CRM sozinho",
+        "Comandas e índice de atrito",
+        "API e webhooks",
+        "Mais uso de IA incluso",
+      ],
     },
     {
+      slug: "escala",
       name: "Escala",
-      subtitle: "Automatiza e Integra",
-      minAgents: 3,
-      prices: {
-        mensal: 234,
-        trimestral: 211,
-        anual: 187
-      },
+      subtitle: "Para alto volume de contatos",
+      minAgents: 5,
+      sobConsulta: true,
+      pricesCents: { mensal: 21990, trimestral: 19791, anual: 17592 },
       featuresHeadline: "Tudo do Impulso, mais:",
       features: [
-        "WhatsApps ilimitados",
-        "Pipelines ilimitados",
-        "Setores ilimitados",
-        "Distribuição avançada",
-        "Permissões avançadas",
-        "Logs e auditoria",
-        "Integrações avançadas para IA",
-        "Multiunidade e multimarca",
-        "Webchat avançado",
-        "Atendimento Prime (VIP)"
-      ]
-    }
+        "API oficial da Meta implantada pela nossa equipe",
+        "Números, agentes e uso de IA sob medida",
+        "Pensado para operações que recebem muitos contatos",
+        "Mensagens da Meta cobradas direto no seu cartão",
+      ],
+    },
   ];
+
+  const reais = (cents: number) =>
+    (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <section className="bg-gradient-to-br from-[#1e1b4b] via-[#272370] to-[#312e81] py-24 relative" id="precos">
@@ -126,24 +128,13 @@ export function Pricing() {
 
         <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
           {plans.map((plan, idx) => {
-            const currentPrice = plan.prices[period];
-            const monthlyPrice = plan.prices.mensal;
-            const isAnnual = period === 'anual';
-            const isQuarterly = period === 'trimestral';
-            
-            let savings = 0;
-            let periodText = "";
-            let totalBilled = 0;
-
-            if (isAnnual) {
-              savings = (monthlyPrice - currentPrice) * 12;
-              totalBilled = currentPrice * 12;
-              periodText = "ano";
-            } else if (isQuarterly) {
-              savings = (monthlyPrice - currentPrice) * 3;
-              totalBilled = currentPrice * 3;
-              periodText = "trimestre";
-            }
+            const currentCents = plan.pricesCents[period];
+            const monthlyCents = plan.pricesCents.mensal;
+            const months = period === "anual" ? 12 : period === "trimestral" ? 3 : 1;
+            const periodText = period === "anual" ? "ano" : period === "trimestral" ? "trimestre" : "mês";
+            // O valor do ciclo já conta o mínimo de atendentes do plano.
+            const totalBilledCents = currentCents * months * plan.minAgents;
+            const savingsCents = (monthlyCents - currentCents) * months * plan.minAgents;
 
             return (
               <div
@@ -166,11 +157,14 @@ export function Pricing() {
                   </p>
                 </div>
 
+                {plan.sobConsulta && (
+                  <p className="text-xs text-slate-400 -mb-1">a partir de</p>
+                )}
                 <div className="mb-3 flex items-start justify-center gap-1 h-[60px] w-full">
                   <span className="text-xl font-medium text-slate-400 mt-2">R$</span>
                   <div className="relative overflow-hidden h-[60px] min-w-[90px]">
-                     <span className="text-6xl font-bold text-white tracking-tighter block transition-transform duration-500">
-                       {currentPrice}
+                     <span className="text-5xl font-bold text-white tracking-tighter block transition-transform duration-500">
+                       {reais(currentCents)}
                      </span>
                   </div>
                   <div className="flex flex-col justify-end pb-2 ml-1 text-slate-400 text-xs text-left">
@@ -180,36 +174,49 @@ export function Pricing() {
                 </div>
 
                 <div className="h-12 mb-4 flex flex-col items-center w-full">
-                   {period !== 'mensal' ? (
-                     <div className="flex flex-col items-center gap-1.5">
-                        <span className="text-xs text-slate-400">Cobrado R$ {totalBilled.toLocaleString('pt-BR')} por {periodText}</span>
+                   <div className="flex flex-col items-center gap-1.5">
+                      <span className="text-xs text-slate-400">
+                        {plan.sobConsulta
+                          ? "Valor final conforme a sua operação"
+                          : `Cobrado R$ ${reais(totalBilledCents)} por ${periodText}`}
+                      </span>
+                      {!plan.sobConsulta && savingsCents > 0 && (
                         <span className="inline-block w-fit bg-emerald-900/50 text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                           Economize R$ {savings.toLocaleString('pt-BR')}
+                           Economize R$ {reais(savingsCents)}
                         </span>
-                     </div>
-                   ) : (
-                      <span className="text-xs text-slate-400 block pt-1">Cobrado mensalmente</span>
-                   )}
+                      )}
+                   </div>
                 </div>
 
                 <div className="border-b border-white/10 pb-6 mb-8 w-full">
                    <p className="text-xs text-slate-400 mb-6">
-                     Contratação mínima de {plan.minAgents} atendentes
+                     {plan.minAgents === 1
+                       ? "1 atendente incluído"
+                       : `Contratação mínima de ${plan.minAgents} atendentes`}
                    </p>
-                   
-                   <button
-                     onClick={() => {
-                        setSelectedPlan({ type: plan.name.toLowerCase() as any, value: currentPrice });
-                        setIsModalOpen(true);
-                     }}
-                     className={`w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block
-                        ${plan.highlight
-                         ? 'bg-white text-slate-900 hover:bg-slate-100 hover:shadow-white/20'
-                         : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90 hover:shadow-indigo-500/30'
-                       }`}
-                   >
-                     Começar teste grátis
-                   </button>
+
+                   {plan.sobConsulta ? (
+                     <Link
+                       href="/contato"
+                       className="w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90 hover:shadow-indigo-500/30"
+                     >
+                       Falar com a gente
+                     </Link>
+                   ) : (
+                     <button
+                       onClick={() => {
+                          setSelectedPlan({ type: plan.slug, value: totalBilledCents / 100, period });
+                          setIsModalOpen(true);
+                       }}
+                       className={`w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block
+                          ${plan.highlight
+                           ? 'bg-white text-slate-900 hover:bg-slate-100 hover:shadow-white/20'
+                           : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90 hover:shadow-indigo-500/30'
+                         }`}
+                     >
+                       Começar teste grátis
+                     </button>
+                   )}
                 </div>
 
                 <p className={`text-[10px] font-bold tracking-widest uppercase mb-4 ${plan.highlight ? 'text-indigo-300' : 'text-slate-400'}`}>
@@ -231,7 +238,9 @@ export function Pricing() {
 
         <div className="mt-16 text-center max-w-2xl mx-auto">
           <p className="text-slate-400 text-sm">
-            Todos os planos incluem <strong className="text-white">7 dias de teste grátis</strong>. Cancele quando quiser. Sem taxa de setup.
+            Essencial e Impulso incluem <strong className="text-white">7 dias de teste grátis</strong>. Cancele quando quiser. Sem taxa de setup.
+            <br />
+            O WhatsApp é conectado por QR code, como no WhatsApp Web. Para proteger o seu número, o sistema não faz disparo em massa: ele responde quem fala com você.
           </p>
         </div>
       </div>
@@ -242,6 +251,7 @@ export function Pricing() {
          organizationId={organizationId}
          planType={selectedPlan.type}
          planValue={selectedPlan.value}
+         billingPeriod={selectedPlan.period}
       />
     </section>
   );

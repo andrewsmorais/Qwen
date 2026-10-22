@@ -3,11 +3,22 @@ import { createSupabaseAdmin } from "@/lib/supabase";
 import { findOrCreateCustomer, createPayment, getPixQrCode } from "@/lib/asaas/client";
 import type { CreatePaymentRequest, BillingType } from "@/lib/asaas/types";
 
-const PLAN_PRICES = {
-  essencial: { mensal: 107, trimestral: 97, anual: 86 },
-  impulso: { mensal: 159, trimestral: 143, anual: 127 },
-  escala: { mensal: 234, trimestral: 211, anual: 187 }
-};
+// Centavos por atendente por mês, no ciclo. Espelha a tabela `plans` do
+// Supabase (22/10/2026). O Escala é sob consulta e não se contrata por aqui.
+const PLAN_CATALOG = {
+  essencial: { minAgents: 1, cents: { mensal: 8990, trimestral: 8091, anual: 7192 } },
+  impulso: { minAgents: 3, cents: { mensal: 14990, trimestral: 13491, anual: 11992 } },
+} as const;
+
+type Period = "mensal" | "trimestral" | "anual";
+const MONTHS: Record<Period, number> = { mensal: 1, trimestral: 3, anual: 12 };
+const BILLING_CYCLE: Record<Period, string> = { mensal: "monthly", trimestral: "quarterly", anual: "yearly" };
+
+/** Valor total do ciclo, em centavos, já com o mínimo de atendentes do plano. */
+function cycleTotalCents(plan: keyof typeof PLAN_CATALOG, period: Period): number {
+  const p = PLAN_CATALOG[plan];
+  return p.cents[period] * MONTHS[period] * p.minAgents;
+}
 
 // Validação simples de CPF/CNPJ (formato)
 function isValidCpfCnpj(value: string): boolean {
@@ -24,19 +35,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
     }
 
-    const validPrices = PLAN_PRICES[body.plan_type as keyof typeof PLAN_PRICES];
-    if (!validPrices) {
+    if (body.plan_type === "escala") {
+      return NextResponse.json({ error: "O plano Escala é sob consulta. Fale com a gente." }, { status: 400 });
+    }
+    const plan = body.plan_type as keyof typeof PLAN_CATALOG;
+    if (!Object.hasOwn(PLAN_CATALOG, plan)) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
-    // Calcula o preço correto baseado no valor enviado para inferir o período
-    // Assume mensal por padrão
-    let correctPrice = validPrices.mensal;
-    if (body.value === validPrices.anual * 12) {
-      correctPrice = validPrices.anual * 12;
-    } else if (body.value === validPrices.trimestral * 3) {
-      correctPrice = validPrices.trimestral * 3;
-    }
+    // O valor cobrado sai SEMPRE do catálogo do servidor, nunca do corpo. O
+    // ciclo vem de `billing_period`; sem ele (cliente antigo), é deduzido do
+    // valor enviado e, se não bater com nenhum ciclo, vale o mensal.
+    const periodos: Period[] = ["mensal", "trimestral", "anual"];
+    const period: Period =
+      body.billing_period && periodos.includes(body.billing_period)
+        ? body.billing_period
+        : periodos.find((p) => Math.round(body.value * 100) === cycleTotalCents(plan, p)) ?? "mensal";
+    const totalCents = cycleTotalCents(plan, period);
+    const correctPrice = totalCents / 100;
 
     if (!isValidCpfCnpj(body.customer_cpf_cnpj)) {
       return NextResponse.json({ error: "CPF/CNPJ inválido" }, { status: 400 });
@@ -87,7 +103,7 @@ export async function POST(req: NextRequest) {
         if (body.installment_count && body.installment_count > 1) {
           const count = Math.min(body.installment_count, 12);
           paymentPayload.installmentCount = count;
-          paymentPayload.installmentValue = Math.round((body.value / count) * 100) / 100;
+          paymentPayload.installmentValue = Math.round(totalCents / count) / 100;
         }
         break;
 
@@ -111,6 +127,14 @@ export async function POST(req: NextRequest) {
       status: "trial", // ATIVANDO O TRIAL
       expires_at: expiresAt, // EXPIRA EM 7 DIAS
       plan_type: body.plan_type,
+      billing_cycle: BILLING_CYCLE[period],
+      seats: PLAN_CATALOG[plan].minAgents,
+      // Preço contratado fica na assinatura (migration 0486 do CRM): mudar a
+      // tabela de preços depois não reescreve o faturamento de quem já assinou.
+      contracted_amount_cents: totalCents,
+      contracted_currency: "BRL",
+      contracted_at: new Date().toISOString(),
+      price_source: "catalogo",
       updated_at: new Date().toISOString(),
     }, {
       onConflict: "organization_id",
