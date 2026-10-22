@@ -171,6 +171,11 @@ export function CheckoutModal({
         );
       }
 
+      // Quem já tem conta (veio do CRM com a organização) entra com a senha dela.
+      if (organizationId && !customerForm.password) {
+        throw new Error("Digite a senha da sua conta para continuar.");
+      }
+
       // Validação de senha para novos cadastros (onboarding self-service)
       if (!organizationId) {
         if (!customerForm.password || customerForm.password.length < 8) {
@@ -241,8 +246,8 @@ export function CheckoutModal({
       const reqHeaders: Record<string, string> = {
         "Content-Type": "application/json",
       };
+      const supabase = createSupabaseClient();
       try {
-        const supabase = createSupabaseClient();
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -252,34 +257,86 @@ export function CheckoutModal({
       } catch {
         // Sem sessão ativa no momento da requisição
       }
+
+      /**
+       * Entra com a conta que já existe. A sessão do CRM mora no endereço do CRM
+       * e esta página não a enxerga: sem isto, quem chegava do CRM para escolher
+       * o plano recebia 401, e quem tinha a conta criada sem plano recebia
+       * "e-mail já cadastrado" sem caminho de volta para o pagamento.
+       */
+      const entrarComAConta = async (): Promise<boolean> => {
+        const { data, error: erroDeEntrada } =
+          await supabase.auth.signInWithPassword({
+            email: customerForm.email.trim(),
+            password: customerForm.password,
+          });
+        if (erroDeEntrada || !data.session?.access_token) return false;
+        reqHeaders["Authorization"] = `Bearer ${data.session.access_token}`;
+        return true;
+      };
+      if (
+        organizationId &&
+        !reqHeaders.Authorization &&
+        !(await entrarComAConta())
+      ) {
+        throw new Error(
+          "E-mail ou senha não conferem com a sua conta. Use os mesmos dados com que você entra no CRM.",
+        );
+      }
+
+      const pedir = () =>
+        fetch("/api/asaas/create-payment", {
+          method: "POST",
+          headers: reqHeaders,
+          body: JSON.stringify({
+            organization_id: organizationId || undefined,
+            plan_slug: planType,
+            billing_cycle: billingCycle,
+            attendants: selecaoDoPedido.seats,
+            customer: {
+              name: customerForm.name,
+              email: customerForm.email,
+              cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
+              phone: phoneDigits,
+              postalCode:
+                (customerForm.postalCode || "").replace(/\D/g, "") || undefined,
+              addressNumber: customerForm.addressNumber || undefined,
+            },
+            // Com sessão, a senha não viaja: a conta já existe.
+            password: reqHeaders.Authorization
+              ? undefined
+              : customerForm.password || undefined,
+            billing_type: method,
+            credit_card_token: creditCardToken,
+            installment_count: cardForm.installments,
+          }),
+        });
+
+      // Cria a cobrança com status Trial ou Pending
+      let payRes = await pedir();
+      if (
+        payRes.status === 409 &&
+        !organizationId &&
+        !reqHeaders.Authorization
+      ) {
+        // A conta já existe (foi criada numa tentativa que não terminou). Com a
+        // mesma senha, entra nela e termina a compra; o servidor acha a
+        // organização pela sessão.
+        const conflito = await payRes
+          .clone()
+          .json()
+          .catch(() => null);
+        if (conflito?.code === "conta_existente") {
+          if (!(await entrarComAConta()))
+            throw new Error(
+              'Este e-mail já tem conta. Digite a senha dela para continuar a compra, ou entre no CRM e use "Esqueci minha senha".',
+            );
+          payRes = await pedir();
+        }
+      }
       setPaymentSessionToken(
         reqHeaders.Authorization?.replace(/^Bearer\s+/i, "") ?? null,
       );
-
-      // Cria a cobrança com status Trial ou Pending
-      const payRes = await fetch("/api/asaas/create-payment", {
-        method: "POST",
-        headers: reqHeaders,
-        body: JSON.stringify({
-          organization_id: organizationId || undefined,
-          plan_slug: planType,
-          billing_cycle: billingCycle,
-          attendants: selecaoDoPedido.seats,
-          customer: {
-            name: customerForm.name,
-            email: customerForm.email,
-            cpfCnpj: customerForm.cpfCnpj.replace(/\D/g, ""),
-            phone: phoneDigits,
-            postalCode:
-              (customerForm.postalCode || "").replace(/\D/g, "") || undefined,
-            addressNumber: customerForm.addressNumber || undefined,
-          },
-          password: customerForm.password || undefined,
-          billing_type: method,
-          credit_card_token: creditCardToken,
-          installment_count: cardForm.installments,
-        }),
-      });
 
       const payData = await payRes.json();
       if (!payRes.ok || (!payData.success && !payData.ok)) {
@@ -387,7 +444,10 @@ export function CheckoutModal({
                   aria-live="polite"
                 >
                   Mínimo de {PLANOS[planType].min_attendants}{" "}
-                  {PLANOS[planType].min_attendants === 1 ? "atendente" : "atendentes"}.{" "}
+                  {PLANOS[planType].min_attendants === 1
+                    ? "atendente"
+                    : "atendentes"}
+                  .{" "}
                   {selecao
                     ? `Total para ${selecao.seats} ${selecao.seats === 1 ? "atendente" : "atendentes"}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
                     : "Informe uma quantidade inteira válida para conferir o total."}
@@ -507,6 +567,27 @@ export function CheckoutModal({
                           className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
                         />
                       </div>
+                    </div>
+                  )}
+                  {organizationId && (
+                    <div className="pt-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Senha da sua conta
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        placeholder="A mesma com que você entra no CRM"
+                        value={customerForm.password}
+                        onChange={(e) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            password: e.target.value,
+                          })
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all text-sm"
+                      />
                     </div>
                   )}
                   {!organizationId && (
