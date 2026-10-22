@@ -169,6 +169,59 @@ export async function POST(req: NextRequest) {
       ? String(body.organization_id).trim()
       : null;
 
+    // Sem organization_id e sem senha, mas COM sessão: é a conta que já existe e
+    // ainda não tem plano (cadastro que parou no meio) — o checkout entrou nela e
+    // não manda senha. Cadastro novo continua mandando senha e cai no Caso 2. A organização sai do vínculo do
+    // próprio usuário, nunca do corpo; havendo mais de uma, ele precisa vir do
+    // CRM, que manda a organização certa. O Caso 1 abaixo revalida tudo.
+    if (!targetOrgId && !body.password) {
+      const authHeaderSemOrg = req.headers.get("authorization");
+      if (authHeaderSemOrg?.startsWith("Bearer ")) {
+        const {
+          data: { user: donoDaSessao },
+        } = await supabase.auth.getUser(
+          authHeaderSemOrg.replace(/^Bearer\s+/i, ""),
+        );
+        if (donoDaSessao) {
+          const { data: vinculos, error: erroDosVinculos } = await supabase
+            .from("user_organizations")
+            .select("organization_id, role")
+            .eq("user_id", donoDaSessao.id)
+            .is("revoked_at", null);
+          if (erroDosVinculos)
+            return NextResponse.json(
+              {
+                error: "Não foi possível conferir sua conta. Tente novamente.",
+              },
+              { status: 503 },
+            );
+          const linhas = (
+            Array.isArray(vinculos) ? vinculos : vinculos ? [vinculos] : []
+          ) as {
+            organization_id?: unknown;
+            role?: unknown;
+          }[];
+          const empresas = linhas.filter(
+            (v) =>
+              typeof v.organization_id === "string" &&
+              UUID_REGEX.test(v.organization_id) &&
+              (v.role === "admin" || v.role === "manager"),
+          );
+          if (empresas.length > 1)
+            return NextResponse.json(
+              {
+                error:
+                  'Sua conta administra mais de uma empresa. Entre no CRM, abra a empresa certa e use "Escolher plano" na tela de cobrança.',
+              },
+              { status: 409 },
+            );
+          // Nenhuma empresa: segue como cadastro novo (Caso 2), que pede senha.
+          if (empresas.length === 1)
+            targetOrgId = empresas[0].organization_id as string;
+        }
+      }
+    }
+
     // 2. Verificação de Identidade e Isolamento de Organização (Correção P0 + Ajuste 1)
     if (targetOrgId) {
       // Caso 1: Usuário informou organization_id existente.
@@ -283,6 +336,7 @@ export async function POST(req: NextRequest) {
             {
               error:
                 "Este e-mail já possui cadastro. Faça login para gerenciar sua assinatura.",
+              code: "conta_existente",
             },
             { status: 409 },
           );
