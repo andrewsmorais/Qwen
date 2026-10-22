@@ -18,6 +18,8 @@ export interface CreatePaymentRequest {
   };
   value: number;
   plan_type: PlanType;
+  /** Ciclo escolhido na página. O servidor recalcula o valor a partir dele. */
+  billing_period?: "mensal" | "trimestral" | "anual";
   billing_type: BillingType;
   credit_card_token?: string;
   installment_count?: number;
