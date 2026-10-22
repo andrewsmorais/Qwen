@@ -449,9 +449,9 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
     expect(m.createSubscription).not.toHaveBeenCalled();
   });
   it.each([
-    ["essencial", "monthly", 2, 214, "MONTHLY"],
-    ["impulso", "quarterly", 4, 1716, "QUARTERLY"],
-    ["escala", "yearly", 3, 6732, "YEARLY"],
+    ["essencial", "monthly", 2, 179.8, "MONTHLY"],
+    ["impulso", "quarterly", 4, 1618.92, "QUARTERLY"],
+    ["essencial", "yearly", 1, 863.04, "YEARLY"],
   ] as const)(
     "ignora preço do cliente: %s %s para %s atendentes",
     async (plan_slug, billing_cycle, attendants, value, cycle) => {
@@ -476,6 +476,15 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
       });
     },
   );
+  it("plano Escala é sob consulta: recusa antes de qualquer efeito", async () => {
+    const res = await checkout(
+      request({ ...base, plan_slug: "escala", attendants: 5 }),
+    );
+    expect(res.status).toBe(400);
+    expect(m.createSubscription).not.toHaveBeenCalled();
+    expect(m.createUser).not.toHaveBeenCalled();
+    expect(m.inserts).toEqual([]);
+  });
   it.each([0, 1, 2.5, "3"])(
     "recusa mínimo insuficiente ou quantidade inválida %s",
     async (attendants) => {

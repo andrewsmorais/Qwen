@@ -173,9 +173,9 @@ beforeEach(() => {
     id: "plano",
     name: "Impulso",
     min_attendants: 3,
-    price_monthly: 15900,
-    price_quarterly: 42900,
-    price_yearly: 152400,
+    price_monthly: 14990,
+    price_quarterly: 40473,
+    price_yearly: 143904,
   };
   m.criar.mockResolvedValue({ id: "sub_teste" });
   m.customer.mockResolvedValue({ id: "cus_teste" });
@@ -204,9 +204,9 @@ const request = (
 
 describe("checkout sem nenhuma chamada financeira real", () => {
   it.each([
-    ["monthly", 477],
-    ["quarterly", 1287],
-    ["yearly", 4572],
+    ["monthly", 449.7],
+    ["quarterly", 1214.19],
+    ["yearly", 4317.12],
   ])(
     "Impulso %s cobra ciclo completo para 3 atendentes",
     async (cycle, value) => {

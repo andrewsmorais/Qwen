@@ -22,26 +22,26 @@ const modal = (planType: Plano, billingCycle: Ciclo, attendants?: number) => {
 
 describe("o valor informado corresponde à quantidade e ao ciclo contratados", () => {
   it.each([
-    ["essencial", "monthly", "R$ 214,00"],
-    ["essencial", "quarterly", "R$ 582,00"],
-    ["essencial", "yearly", "R$ 2.064,00"],
-    ["impulso", "monthly", "R$ 477,00"],
-    ["impulso", "quarterly", "R$ 1.287,00"],
-    ["impulso", "yearly", "R$ 4.572,00"],
-    ["escala", "monthly", "R$ 702,00"],
-    ["escala", "quarterly", "R$ 1.899,00"],
-    ["escala", "yearly", "R$ 6.732,00"],
+    ["essencial", "monthly", "R$ 89,90"],
+    ["essencial", "quarterly", "R$ 242,73"],
+    ["essencial", "yearly", "R$ 863,04"],
+    ["impulso", "monthly", "R$ 449,70"],
+    ["impulso", "quarterly", "R$ 1.214,19"],
+    ["impulso", "yearly", "R$ 4.317,12"],
+    ["escala", "monthly", "R$ 1.099,50"],
+    ["escala", "quarterly", "R$ 2.968,65"],
+    ["escala", "yearly", "R$ 10.555,20"],
   ] as const)("%s %s mostra o total do mínimo de atendentes", (plano, ciclo, total) => {
     const html = modal(plano, ciclo);
     expect(html).toContain(total);
-    expect(html).toContain(`Total para ${PLANOS[plano].min_attendants} atendentes`);
+    expect(html).toContain(`Total para ${PLANOS[plano].min_attendants} ${PLANOS[plano].min_attendants === 1 ? "atendente" : "atendentes"}`);
     expect(html).toContain('id="checkout-attendants"');
     expect(html).toContain(`min="${PLANOS[plano].min_attendants}"`);
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it("aumentar os atendentes recalcula o valor exibido", () => {
-    expect(modal("impulso", "quarterly", 4)).toContain("Total para 4 atendentes: R$ 1.716,00");
+    expect(modal("impulso", "quarterly", 4)).toContain("Total para 4 atendentes: R$ 1.618,92");
   });
 
   it("quantidade inválida não mostra um total contratado válido", () => {
@@ -57,6 +57,11 @@ describe("o valor informado corresponde à quantidade e ao ciclo contratados", (
 
   it("cartões mensais informam o total da contratação mínima", () => {
     const html = renderToStaticMarkup(createElement(Pricing));
-    for (const total of ["R$ 214,00", "R$ 477,00", "R$ 702,00"]) expect(html).toContain(total);
+    for (const total of ["R$ 89,90", "R$ 449,70"]) expect(html).toContain(total);
+    // Escala é sob consulta: mostra "a partir de" e leva ao contato, não ao checkout.
+    expect(html).toContain("a partir de");
+    expect(html).toContain("Falar com a gente");
+    expect(html).toContain('href="/contato"');
+    expect(html).toContain("1 atendente incluído");
   });
 });

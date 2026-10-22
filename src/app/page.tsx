@@ -35,26 +35,26 @@ export default function Home() {
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "BRL",
-      "lowPrice": "107",
-      "highPrice": "234",
+      "lowPrice": "89.90",
+      "highPrice": "219.90",
       "offerCount": "3",
       "offers": [
         {
           "@type": "Offer",
           "name": "Essencial",
-          "price": "107",
+          "price": "89.90",
           "priceCurrency": "BRL"
         },
         {
           "@type": "Offer",
           "name": "Impulso",
-          "price": "159",
+          "price": "149.90",
           "priceCurrency": "BRL"
         },
         {
           "@type": "Offer",
           "name": "Escala",
-          "price": "234",
+          "price": "219.90",
           "priceCurrency": "BRL"
         }
       ]
@@ -433,7 +433,7 @@ export default function Home() {
                <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                   <ul className="space-y-6">
                      {[
-                        "Disparos inteligentes e notificações segmentadas para sua base",
+                        "Follow-up automático com quem já conversou com você, sem disparo em massa",
                         "Múltiplos atendentes humanos no mesmo número com agente AI",
                         "Relatórios avançados e métricas de conversão (Em breve: integração com Meta e Google Ads)",
                         "Tags, etiquetas e organização visual em Kanban (Funil)",

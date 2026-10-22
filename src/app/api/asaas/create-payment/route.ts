@@ -89,6 +89,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (selecao.plano.sob_consulta) {
+      return NextResponse.json(
+        {
+          error:
+            "O plano Escala é sob consulta. Fale com a gente para combinar a implantação.",
+        },
+        { status: 400 },
+      );
+    }
+
     if (!["monthly", "quarterly", "yearly"].includes(billingCycle)) {
       return NextResponse.json(
         { error: "Ciclo de faturamento inválido (monthly, quarterly, yearly)" },
