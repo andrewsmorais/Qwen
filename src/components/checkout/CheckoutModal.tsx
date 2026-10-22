@@ -386,9 +386,10 @@ export function CheckoutModal({
                   className="text-sm text-slate-500 mt-2"
                   aria-live="polite"
                 >
-                  Mínimo de {PLANOS[planType].min_attendants} atendentes.{" "}
+                  Mínimo de {PLANOS[planType].min_attendants}{" "}
+                  {PLANOS[planType].min_attendants === 1 ? "atendente" : "atendentes"}.{" "}
                   {selecao
-                    ? `Total para ${selecao.seats} atendentes: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
+                    ? `Total para ${selecao.seats} ${selecao.seats === 1 ? "atendente" : "atendentes"}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
                     : "Informe uma quantidade inteira válida para conferir o total."}
                 </p>
               </div>

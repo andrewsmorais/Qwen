@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { selecionarPlano } from "./planos.ts";
+import { PLANOS, selecionarPlano } from "./planos.ts";
 import { fimDoCiclo } from "./ciclo-assinatura.ts";
 
 for (const [slug, seats, prices] of [
-  ["essencial", 2, [10700, 29100, 103200]],
-  ["impulso", 3, [15900, 42900, 152400]],
-  ["escala", 3, [23400, 63300, 224400]],
+  ["essencial", 1, [8990, 24273, 86304]],
+  ["impulso", 3, [14990, 40473, 143904]],
+  ["escala", 5, [21990, 59373, 211104]],
 ]) {
   for (const [index, cycle] of ["monthly", "quarterly", "yearly"].entries()) {
     test(`${slug} ${cycle}: valor pelo ciclo completo e mínimo contratado`, () => {
@@ -25,6 +25,17 @@ for (const seats of [0, 1, -1, 1.5, Infinity, NaN, "3", 1001])
   test(`recusa atendentes inválidos ${seats}`, () => {
     assert.throws(() => selecionarPlano("impulso", "monthly", seats));
   });
+test("descontos: trimestral 10% e anual 20% sobre o mensal", () => {
+  for (const [slug, plano] of Object.entries(PLANOS)) {
+    assert.equal(plano.price_quarterly, Math.round(plano.price_monthly * 3 * 0.9), slug);
+    assert.equal(plano.price_yearly, Math.round(plano.price_monthly * 12 * 0.8), slug);
+  }
+});
+test("só o Escala é sob consulta", () => {
+  assert.equal(PLANOS.essencial.sob_consulta, false);
+  assert.equal(PLANOS.impulso.sob_consulta, false);
+  assert.equal(PLANOS.escala.sob_consulta, true);
+});
 test("não aceita plano ou ciclo inventados", () => {
   assert.throws(() => selecionarPlano("__proto__", "monthly", 3));
   assert.throws(() => selecionarPlano("impulso", "weekly", 3));

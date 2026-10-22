@@ -20,7 +20,7 @@ export default function PrivacidadePage() {
         
         <header className="mb-12 border-b border-slate-200 pb-8">
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">Política de Privacidade</h1>
-          <p className="text-slate-500 text-sm">Última atualização: 28 de setembro de 2026</p>
+          <p className="text-slate-500 text-sm">Última atualização: 22 de outubro de 2026</p>
         </header>
         
         <article className="space-y-6 text-lg leading-relaxed">
@@ -47,6 +47,9 @@ export default function PrivacidadePage() {
             <li><strong className="text-slate-900 font-semibold">Base de Conhecimento para IA:</strong> Textos, respostas-padrão, tabelas de preços e catálogos fornecidos pelo utilizador para configurar o treino do seu agente de vendas e atendimento.</li>
             <li><strong className="text-slate-900 font-semibold">Dados Técnicos de Navegação:</strong> Endereço IP, tipo de navegador, sistema operativo, páginas acedidas, carimbos de data/hora e identificadores de sessão.</li>
           </ul>
+          <p>
+            O ChatAI Online é destinado a pessoas maiores de 18 anos e a empresas. Não coletamos intencionalmente dados de menores de idade nem dados pessoais sensíveis para fins próprios. Como o USUÁRIO decide o que registra no CRM, cabe a ele evitar inserir dados sensíveis dos seus contatos sem base legal adequada.
+          </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">3. Finalidade do Tratamento de Dados</h2>
           <p>Os dados recolhidos destinam-se às seguintes finalidades:</p>
@@ -56,6 +59,9 @@ export default function PrivacidadePage() {
             <li><strong className="text-slate-900 font-semibold">Segurança e Prevenção contra Fraudes:</strong> Monitorizar acessos anómalos, tentativas de ataque, abuso de infraestrutura ou atividades ilícitas na plataforma.</li>
             <li><strong className="text-slate-900 font-semibold">Cumprimento de Obrigações Legais:</strong> Emissão de notas fiscais, cumprimento de decisões judiciais e manutenção de registos de conexão conforme o Marco Civil da Internet (Lei n.º 12.965/2014).</li>
           </ul>
+          <p>
+            <strong className="text-slate-900 font-semibold">Bases legais (LGPD, art. 7º):</strong> a execução do contrato (prestar o serviço contratado), o cumprimento de obrigação legal ou regulatória (notas fiscais e registros de acesso), o legítimo interesse (segurança, prevenção a fraudes e melhoria do serviço, sempre respeitando os direitos do titular) e, quando for o caso, o consentimento.
+          </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">4. Partilha de Dados com Terceiros</h2>
           <p>
@@ -67,6 +73,12 @@ export default function PrivacidadePage() {
             <li><strong className="text-slate-900 font-semibold">Gateways de Pagamento:</strong> Processadoras de pagamento responsáveis por validar assinaturas e cobranças dos planos.</li>
             <li><strong className="text-slate-900 font-semibold">Autoridades Governamentais:</strong> Quando exigido por lei, decisão judicial ou ordem de autoridade competente.</li>
           </ul>
+          <p>
+            <strong className="text-slate-900 font-semibold">Principais fornecedores (operadores):</strong> Hostinger (servidores VPS onde a plataforma roda), Supabase (banco de dados e autenticação), Asaas (cobrança e pagamentos), OpenAI (modelos de inteligência artificial e transcrição de áudio) e Resend (envio de e-mails). Esta lista pode mudar à medida que a plataforma evolui, e a versão atual está sempre nesta página.
+          </p>
+          <p>
+            <strong className="text-slate-900 font-semibold">Transferência internacional:</strong> alguns desses fornecedores podem tratar dados em servidores fora do Brasil. Nesses casos, exigimos garantias contratuais e medidas de segurança compatíveis com a LGPD (art. 33).
+          </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">5. Armazenamento e Segurança das Informações</h2>
           <p>
@@ -78,7 +90,10 @@ export default function PrivacidadePage() {
             <li>Barreiras de proteção por firewall e controlo de acessos restrito à infraestrutura de servidores.</li>
           </ul>
           <p>
-            <strong className="text-slate-900 font-semibold">5.2.</strong> As informações são mantidas ativas enquanto a assinatura do utilizador estiver vigente. Após o encerramento da conta, os dados operacionais poderão ser eliminados de forma definitiva, ressalvadas as hipóteses de guarda obrigatória por lei.
+            <strong className="text-slate-900 font-semibold">5.2. Prazo de guarda.</strong> Mantemos os dados enquanto a assinatura estiver ativa. Após o encerramento da conta, o USUÁRIO pode exportar seus dados por até 30 (trinta) dias, e depois disso eles poderão ser excluídos definitivamente. Mantemos por mais tempo apenas o que a lei exige: registros de acesso por 6 (seis) meses (Marco Civil da Internet) e documentos fiscais e de cobrança pelos prazos da legislação tributária.
+          </p>
+          <p>
+            <strong className="text-slate-900 font-semibold">5.3. Incidentes de segurança.</strong> Se ocorrer um incidente que possa causar risco ou dano relevante aos titulares, comunicaremos os usuários afetados e a Autoridade Nacional de Proteção de Dados (ANPD) nos prazos da regulamentação, informando o que aconteceu e o que está sendo feito.
           </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">6. Direitos dos Titulares de Dados</h2>
@@ -88,10 +103,12 @@ export default function PrivacidadePage() {
             <li>O acesso facilitado às suas informações registadas;</li>
             <li>A correção de dados incompletos, inexatos ou desatualizados;</li>
             <li>A anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade com a legislação;</li>
+            <li>A portabilidade dos dados a outro fornecedor, nos termos da regulamentação;</li>
+            <li>A informação sobre com quem os dados foram compartilhados;</li>
             <li>A revogação do consentimento concedido previamente.</li>
           </ul>
           <p>
-            Para exercer qualquer um destes direitos, o pedido deve ser enviado para o e-mail: <a href="mailto:suporte@chataionline.io" className="text-indigo-600 hover:text-indigo-700 transition-colors">suporte@chataionline.io</a>.
+            Para exercer qualquer um destes direitos, o pedido deve ser enviado para o e-mail: <a href="mailto:suporte@chataionline.io" className="text-indigo-600 hover:text-indigo-700 transition-colors">suporte@chataionline.io</a>. Respondemos em até 15 (quinze) dias. Se o pedido se referir a dados de um contato que está no CRM de um USUÁRIO (em que atuamos como Operador), encaminhamos o pedido ao USUÁRIO, que é o Controlador desses dados.
           </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">7. Atualizações desta Política</h2>
@@ -104,6 +121,7 @@ export default function PrivacidadePage() {
           <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
             <li><strong className="text-slate-900 font-semibold">Responsável:</strong> Andrews Rocha De Morais</li>
             <li><strong className="text-slate-900 font-semibold">E-mail de Privacidade e Suporte:</strong> <a href="mailto:suporte@chataionline.io" className="text-indigo-600 hover:text-indigo-700 transition-colors">suporte@chataionline.io</a></li>
+            <li><strong className="text-slate-900 font-semibold">Telefone/WhatsApp de Suporte:</strong> (12) 98166-7389</li>
             <li><strong className="text-slate-900 font-semibold">Endereço Comercial:</strong> Avenida Marginal, 761, CEP 11687-147, Ubatuba - São Paulo, Brasil</li>
           </ul>
         </article>

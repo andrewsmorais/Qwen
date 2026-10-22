@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { CheckoutModal } from "./checkout/CheckoutModal";
 import { PLANOS, selecionarPlano, type Plano, type Ciclo } from "@/lib/planos";
@@ -12,6 +13,11 @@ const periodos: Record<Period, { ciclo: Ciclo; meses: number; nome: string }> =
     trimestral: { ciclo: "quarterly", meses: 3, nome: "trimestre" },
     anual: { ciclo: "yearly", meses: 12, nome: "ano" },
   };
+const reais = (valor: number) =>
+  valor.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 const moeda = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -32,50 +38,45 @@ export function Pricing() {
   }[] = [
     {
       slug: "essencial",
-      subtitle: "Organiza",
+      subtitle: "Para quem atende sozinho",
       features: [
-        "2 Números de WhatsApp",
+        "1 número de WhatsApp (QR code)",
         "Caixa de entrada compartilhada",
-        "CRM Kanban",
-        "Fluxos de atendimento IA",
-        "Agentes IA",
-        "Base de conhecimento",
-
-        "Relatórios essenciais",
+        "CRM Kanban com 1 funil",
+        "Agenda com agendamento feito pelo agente",
+        "1 agente de IA com base de conhecimento e memória",
+        "Entende texto, áudio e foto",
+        "Chatbot de menu",
+        "Passagem da IA para atendente humano",
+        "Radar de conversas, catálogo de produtos e importação de planilha",
+        "Uso de IA incluso, com uso justo",
       ],
     },
     {
       slug: "impulso",
-      subtitle: "Acelera",
+      subtitle: "Para equipes",
       highlight: true,
       featuresHeadline: "Tudo do Essencial, mais:",
       features: [
-        "Até 3 Números de WhatsApp",
-        "5 pipelines de vendas",
-        "Fluxos avançados e Agendamento",
-        "Campanhas em massa",
+        "Até 3 números de WhatsApp (QR code)",
+        "5 funis de vendas",
+        "3 agentes de IA com fluxos visuais e skills",
         "Distribuição automática de leads",
-        "Agentes IA com processos",
-        "Skills para IA",
-        "API e Webhooks",
-        "Relatórios completos",
+        "Agente que organiza o CRM sozinho",
+        "Comandas e índice de atrito",
+        "API e webhooks",
+        "Mais uso de IA incluso",
       ],
     },
     {
       slug: "escala",
-      subtitle: "Automatiza e Integra",
+      subtitle: "Para alto volume de contatos",
       featuresHeadline: "Tudo do Impulso, mais:",
       features: [
-        "WhatsApps ilimitados",
-        "Pipelines ilimitados",
-
-        "Distribuição avançada",
-        "Permissões avançadas",
-        "Logs e auditoria",
-        "Integrações avançadas para IA",
-        "Multiunidade e multimarca",
-        "API aberta para chat customizado",
-        "Atendimento Prime (VIP)",
+        "API oficial da Meta implantada pela nossa equipe",
+        "Números, agentes e uso de IA sob medida",
+        "Pensado para operações que recebem muitos contatos",
+        "Mensagens da Meta cobradas direto no seu cartão",
       ],
     },
   ];
@@ -160,13 +161,16 @@ export function Pricing() {
                   </p>
                 </div>
 
+                {selecao.plano.sob_consulta && (
+                  <p className="text-xs text-slate-400 -mb-1">a partir de</p>
+                )}
                 <div className="mb-3 flex items-start justify-center gap-1 h-[60px] w-full">
                   <span className="text-xl font-medium text-slate-400 mt-2">
                     R$
                   </span>
                   <div className="relative overflow-hidden h-[60px] min-w-[90px]">
-                    <span className="text-6xl font-bold text-white tracking-tighter block transition-transform duration-500">
-                      {currentPrice}
+                    <span className="text-5xl font-bold text-white tracking-tighter block transition-transform duration-500">
+                      {reais(currentPrice)}
                     </span>
                   </div>
                   <div className="flex flex-col justify-end pb-2 ml-1 text-slate-400 text-xs text-left">
@@ -176,7 +180,11 @@ export function Pricing() {
                 </div>
 
                 <div className="h-12 mb-4 flex flex-col items-center w-full">
-                  {period !== "mensal" ? (
+                  {selecao.plano.sob_consulta ? (
+                    <span className="text-xs text-slate-400 block pt-1">
+                      Valor final conforme a sua operação
+                    </span>
+                  ) : period !== "mensal" ? (
                     <div className="flex flex-col items-center gap-1.5">
                       <span className="text-xs text-slate-400">
                         Cobrado {moeda.format(totalBilled)} por {periodo.nome}
@@ -194,36 +202,46 @@ export function Pricing() {
 
                 <div className="border-b border-white/10 pb-6 mb-8 w-full">
                   <p className="text-xs text-slate-400 mb-6">
-                    Contratação mínima de {selecao.plano.min_attendants}{" "}
-                    atendentes
+                    {selecao.plano.min_attendants === 1
+                      ? "1 atendente incluído"
+                      : `Contratação mínima de ${selecao.plano.min_attendants} atendentes`}
                   </p>
 
-                  <button
-                    onClick={() => {
-                      const orgParam = new URLSearchParams(
-                        window.location.search,
-                      ).get("org_id");
-                      // A URL indica o destino; o servidor ainda exige sessão e vínculo.
-                      setOrganizationId(
-                        orgParam &&
-                          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-                            orgParam,
-                          )
-                          ? orgParam
-                          : null,
-                      );
-                      setSelectedPlan(plan.slug);
-                      setIsModalOpen(true);
-                    }}
-                    className={`w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block
+                  {selecao.plano.sob_consulta ? (
+                    <Link
+                      href="/contato"
+                      className="w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90 hover:shadow-indigo-500/30"
+                    >
+                      Falar com a gente
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const orgParam = new URLSearchParams(
+                          window.location.search,
+                        ).get("org_id");
+                        // A URL indica o destino; o servidor ainda exige sessão e vínculo.
+                        setOrganizationId(
+                          orgParam &&
+                            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                              orgParam,
+                            )
+                            ? orgParam
+                            : null,
+                        );
+                        setSelectedPlan(plan.slug);
+                        setIsModalOpen(true);
+                      }}
+                      className={`w-full py-3.5 rounded-full text-center font-bold transition-all duration-300 text-sm shadow-lg block
                         ${
                           plan.highlight
                             ? "bg-white text-slate-900 hover:bg-slate-100 hover:shadow-white/20"
                             : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90 hover:shadow-indigo-500/30"
                         }`}
-                  >
-                    Começar teste grátis
-                  </button>
+                    >
+                      Começar teste grátis
+                    </button>
+                  )}
                 </div>
 
                 <p
