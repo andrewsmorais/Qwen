@@ -204,6 +204,7 @@ export default function TermosPage() {
           </p>
           <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
             <li><strong className="text-slate-900 font-semibold">E-mail de Suporte e Jurídico:</strong> <a href="mailto:suporte@chataionline.io" className="text-indigo-600 hover:text-indigo-700 transition-colors">suporte@chataionline.io</a></li>
+            <li><strong className="text-slate-900 font-semibold">Telefone/WhatsApp de Suporte:</strong> (12) 98166-7389</li>
             <li><strong className="text-slate-900 font-semibold">Horário de Atendimento Humano:</strong> De segunda a sexta-feira, das 09h00 às 18h00 (horário de Brasília).</li>
           </ul>
 

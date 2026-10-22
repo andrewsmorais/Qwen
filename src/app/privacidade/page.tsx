@@ -74,7 +74,7 @@ export default function PrivacidadePage() {
             <li><strong className="text-slate-900 font-semibold">Autoridades Governamentais:</strong> Quando exigido por lei, decisão judicial ou ordem de autoridade competente.</li>
           </ul>
           <p>
-            <strong className="text-slate-900 font-semibold">Principais fornecedores (operadores):</strong> Supabase (banco de dados e autenticação), Asaas (cobrança e pagamentos), OpenAI (modelos de inteligência artificial e transcrição de áudio) e Resend (envio de e-mails). Esta lista pode mudar à medida que a plataforma evolui, e a versão atual está sempre nesta página.
+            <strong className="text-slate-900 font-semibold">Principais fornecedores (operadores):</strong> Hostinger (servidores VPS onde a plataforma roda), Supabase (banco de dados e autenticação), Asaas (cobrança e pagamentos), OpenAI (modelos de inteligência artificial e transcrição de áudio) e Resend (envio de e-mails). Esta lista pode mudar à medida que a plataforma evolui, e a versão atual está sempre nesta página.
           </p>
           <p>
             <strong className="text-slate-900 font-semibold">Transferência internacional:</strong> alguns desses fornecedores podem tratar dados em servidores fora do Brasil. Nesses casos, exigimos garantias contratuais e medidas de segurança compatíveis com a LGPD (art. 33).
@@ -121,6 +121,7 @@ export default function PrivacidadePage() {
           <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
             <li><strong className="text-slate-900 font-semibold">Responsável:</strong> Andrews Rocha De Morais</li>
             <li><strong className="text-slate-900 font-semibold">E-mail de Privacidade e Suporte:</strong> <a href="mailto:suporte@chataionline.io" className="text-indigo-600 hover:text-indigo-700 transition-colors">suporte@chataionline.io</a></li>
+            <li><strong className="text-slate-900 font-semibold">Telefone/WhatsApp de Suporte:</strong> (12) 98166-7389</li>
             <li><strong className="text-slate-900 font-semibold">Endereço Comercial:</strong> Avenida Marginal, 761, CEP 11687-147, Ubatuba - São Paulo, Brasil</li>
           </ul>
         </article>
