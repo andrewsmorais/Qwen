@@ -241,7 +241,7 @@ export default function Home() {
                   Do primeiro &apos;oi&apos; ao fechamento
                 </h3>
                 <p className="text-slate-500 leading-relaxed text-sm mb-6">
-                  Sua IA não apenas tira dúvidas. Ela qualifica leads, apresenta produtos, envia links de pagamento e conduz o cliente até a compra.
+                  Sua IA não apenas tira dúvidas. Ela qualifica leads, apresenta produtos e conduz o cliente até a compra.
                 </p>
                 <div className="h-40 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col items-center justify-center p-5 relative overflow-hidden w-full mt-auto">
                    <div className="flex flex-col w-full max-w-[220px]">
@@ -281,7 +281,7 @@ export default function Home() {
                 
                 <ul className="space-y-4">
                   {[
-                    { title: "Vendas Diretas & E-commerce:", text: "Envia fotos de produtos, calcula fretes, recomenda itens e entrega links de pagamento Pix ou cartão na hora." },
+                    { title: "Vendas Diretas & E-commerce:", text: "Envia fotos de produtos, calcula fretes, recomenda itens e prepara o fechamento. Checkout nativo na conversa: em breve." },
                     { title: "Suporte & Dúvidas Rápidas:", text: "Responde sobre horários, políticas de troca, endereços e informações técnicas sem deixar o cliente em espera." },
                     { title: "Agendamento Automático:", text: "Bloqueia horários e organiza a rotina de barbearias, salões, clínicas de estética e consultórios." },
                     { title: "Qualificação de Orçamentos:", text: "Filtra leads para prestadores de serviços, oficinas, corretores e advogados antes do atendimento humano." }
@@ -315,7 +315,7 @@ export default function Home() {
                       </div>
                       <div className="bg-[#d9fdd3] p-3 rounded-2xl rounded-tr-sm shadow-sm text-sm self-end max-w-[80%] relative">
                         <div className="font-semibold text-indigo-600 text-xs mb-1">IA Assistente</div>
-                        Aceitamos Pix, Cartão de Crédito em até 12x e Boleto. Posso gerar o link de pagamento do plano Pro para você?
+                        Aceitamos Pix, Cartão de Crédito em até 12x e Boleto. Posso te conectar com um atendente para fechar seu pedido agora?
                       </div>
                       <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm self-start max-w-[80%]">
                         Pode sim!
@@ -478,7 +478,7 @@ export default function Home() {
                      {[
                         { icon: <Zap className="w-5 h-5" />, title: "Disponibilidade total:", text: "Atendimento instantâneo 24h por dia, sem fila de espera, inclusive madrugadas e feriados." },
                         { icon: <Sparkles className="w-5 h-5" />, title: "Empatia e negociação ativa:", text: "Treinado no prompt para entender gírias, contornar objeções com calma e conversar de forma humanizada." },
-                        { icon: <BadgeCheck className="w-5 h-5" />, title: "Fechamento de ponta a ponta:", text: "Envia catálogos, responde dúvidas complexas, gera links de pagamento e confirma pedidos no WhatsApp." },
+                        { icon: <BadgeCheck className="w-5 h-5" />, title: "Fechamento de ponta a ponta:", text: "Envia catálogos, responde dúvidas complexas e confirma pedidos no WhatsApp. Link de pagamento na conversa: em breve." },
                         { icon: <TrendingUp className="w-5 h-5" />, title: "Papel principal:", text: "Ser o vendedor de elite da sua empresa, qualificando e fechando vendas no piloto automático." }
                      ].map((item, i) => (
                         <li key={i} className="flex items-start gap-4">

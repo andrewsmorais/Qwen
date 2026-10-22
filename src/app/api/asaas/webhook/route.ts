@@ -1,94 +1,160 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase";
-import type { AsaasWebhookEvent, SubscriptionStatus } from "@/lib/asaas/types";
+import { fimDoCiclo } from "@/lib/ciclo-assinatura";
 import crypto from "crypto";
 
-function validateAsaasToken(req: NextRequest): boolean {
+export async function POST(req: NextRequest) {
   const secret = process.env.ASAAS_WEBHOOK_SECRET;
   const token = req.headers.get("asaas-access-token");
-  if (!secret || !token) return false;
-  const a = Buffer.from(token);
-  const b = Buffer.from(secret);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
-}
-
-export async function POST(req: NextRequest) {
+  if (
+    !secret ||
+    !token ||
+    Buffer.byteLength(secret) !== Buffer.byteLength(token) ||
+    !crypto.timingSafeEqual(Buffer.from(secret), Buffer.from(token))
+  ) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
   try {
-    if (!validateAsaasToken(req)) {
-      console.error("[Webhook] Invalid token detected");
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const event = await req.json();
+    const evento = event?.event;
+    const subId = event?.payment?.subscription ?? event?.subscription?.id;
+    if (typeof subId !== "string" || !subId.startsWith("sub_")) {
+      return NextResponse.json({ received: true, matched: false });
     }
-
-    const rawBody = await req.text();
-    const event: AsaasWebhookEvent = JSON.parse(rawBody);
-
-    console.log("[Webhook] Event received:", event.event, "Payment:", event.payment?.id);
-
-    if (!event.payment?.id) {
+    const supabase = createSupabaseAdmin();
+    // A identidade é a assinatura armazenada, nunca só a organização de um
+    // evento antigo. Não reatribuir uma cobrança desconhecida via externalReference.
+    const { data: sub, error: lookupError } = await supabase
+      .from("subscriptions")
+      .select(
+        "id, organization_id, billing_cycle, current_period_start, current_period_end, status, canceled_at, updated_at",
+      )
+      .eq("asaas_subscription_id", subId)
+      .maybeSingle();
+    if (lookupError)
+      return NextResponse.json(
+        { error: "Subscription lookup failed" },
+        { status: 503 },
+      );
+    if (!sub) return NextResponse.json({ received: true, matched: false });
+    const update: Record<string, unknown> = {};
+    const dueDate = event?.payment?.dueDate;
+    if (evento === "PAYMENT_CONFIRMED" || evento === "PAYMENT_RECEIVED") {
+      const fim =
+        typeof dueDate === "string"
+          ? fimDoCiclo(dueDate, sub.billing_cycle)
+          : null;
+      if (!fim)
+        return NextResponse.json(
+          { error: "Invalid payment period" },
+          { status: 422 },
+        );
+      // Reentrega do mesmo evento é idempotente; liquidação antiga não encurta
+      // nem reativa um período posterior já persistido.
+      if (
+        sub.current_period_end &&
+        Date.parse(fim) <= Date.parse(sub.current_period_end)
+      ) {
+        return NextResponse.json({ received: true });
+      }
+      // A marca canônica sobrevive a atraso/estorno. Creditar uma nova fatura
+      // paga não recria a recorrência. Uma reativação futura terá de ser
+      // explícita e limpar canceled_at depois da confirmação do provedor.
+      update.status =
+        sub.status === "canceled" || sub.canceled_at ? "canceled" : "active";
+      update.current_period_start = dueDate + "T00:00:00.000Z";
+      update.current_period_end = fim;
+      update.expires_at = fim;
+      if (typeof event.payment.id === "string")
+        update.asaas_payment_id = event.payment.id;
+    } else if (evento === "PAYMENT_OVERDUE") {
+      if (typeof dueDate !== "string")
+        return NextResponse.json(
+          { error: "Invalid payment period" },
+          { status: 422 },
+        );
+      // Uma fatura aberta pode vencer depois do cancelamento. Conservar a
+      // situação permite creditar a liquidação sem reativar essa recorrência.
+      if (sub.status === "canceled")
+        return NextResponse.json({ received: true });
+      // Ignorar atraso de uma fatura de antes do período pago atual.
+      if (
+        sub.status === "active" &&
+        sub.current_period_start &&
+        dueDate <= String(sub.current_period_start).slice(0, 10)
+      )
+        return NextResponse.json({ received: true });
+      update.status = "past_due";
+    } else if (
+      evento === "SUBSCRIPTION_DELETED" ||
+      evento === "SUBSCRIPTION_INACTIVATED" ||
+      (evento === "SUBSCRIPTION_UPDATED" &&
+        event.subscription?.status === "INACTIVE")
+    ) {
+      // Cancelar recorrência não desfaz estorno, contestação ou inadimplência.
+      // Esses estados não podem ganhar acesso por terem uma data futura.
+      if (!["suspended", "past_due", "pending"].includes(sub.status))
+        update.status = "canceled";
+      update.canceled_at = new Date().toISOString();
+    } else if (
+      evento === "PAYMENT_REFUNDED" ||
+      evento === "PAYMENT_CHARGEBACK_REQUESTED"
+    ) {
+      const fim =
+        typeof dueDate === "string"
+          ? fimDoCiclo(dueDate, sub.billing_cycle)
+          : null;
+      if (!fim)
+        return NextResponse.json(
+          { error: "Invalid payment period" },
+          { status: 422 },
+        );
+      if (
+        fim &&
+        sub.current_period_end &&
+        Date.parse(fim) < Date.parse(sub.current_period_end)
+      )
+        return NextResponse.json({ received: true });
+      update.status = "suspended";
+      // A situação suspende o acesso. A data continua marcando a última fatura
+      // tratada para impedir que uma confirmação atrasada a libere novamente.
+      update.current_period_end =
+        sub.current_period_end &&
+        Date.parse(sub.current_period_end) > Date.parse(fim)
+          ? sub.current_period_end
+          : fim;
+      update.expires_at = update.current_period_end;
+    } else {
+      // SUBSCRIPTION_CREATED/UPDATED e eventos de split descrevem a recorrência,
+      // não comprovam liquidação. Não ampliar plano/vagas nem ativar pagamento.
       return NextResponse.json({ received: true });
     }
-
-    const supabase = createSupabaseAdmin();
-    const paymentId = event.payment.id;
-
-    let newStatus: SubscriptionStatus | null = null;
-    let expiresAt: string | null = null;
-
-    switch (event.event) {
-      case "PAYMENT_CONFIRMED":
-      case "PAYMENT_RECEIVED": {
-        newStatus = "confirmed";
-        // Determinar duração baseada na descrição ou plan_type
-        const description = event.payment.description?.toLowerCase() || "";
-        const isAnnual = description.includes("anual") || description.includes("annual");
-        const daysToAdd = isAnnual ? 365 : 30;
-        expiresAt = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
-        break;
-      }
-
-      case "PAYMENT_OVERDUE":
-        newStatus = "overdue";
-        break;
-
-      case "PAYMENT_DELETED":
-      case "PAYMENT_REFUNDED":
-        newStatus = "cancelled";
-        break;
-
-      default:
-        console.log("[Webhook] Unhandled event:", event.event);
-        return NextResponse.json({ received: true });
-    }
-
-    if (newStatus) {
-      const updateData: Record<string, unknown> = {
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (expiresAt) {
-        updateData.expires_at = expiresAt;
-      }
-
-      const { error } = await supabase
-        .from("subscriptions")
-        .update(updateData)
-        .eq("asaas_payment_id", paymentId);
-
-      if (error) {
-        console.error("[Webhook] DB update error:", error);
-        // Retorna 200 mesmo assim para o Asaas não reenviar
-      } else {
-        console.log("[Webhook] Subscription updated:", paymentId, "→", newStatus);
-      }
-    }
-
+    update.updated_at = new Date().toISOString();
+    const mutation = supabase
+      .from("subscriptions")
+      .update(update)
+      .eq("organization_id", sub.organization_id)
+      .eq("id", sub.id)
+      .eq("asaas_subscription_id", subId)
+      // Concorrência: um evento não sobrescreve um período que mudou na leitura.
+      .eq("status", sub.status)
+      .eq("updated_at", sub.updated_at);
+    const { data: updated, error } = await mutation.select("id");
+    if (error)
+      return NextResponse.json(
+        { error: "Subscription update failed" },
+        { status: 503 },
+      );
+    if (!updated?.length)
+      return NextResponse.json(
+        { error: "Subscription changed; retry event" },
+        { status: 503 },
+      );
     return NextResponse.json({ received: true });
-
-  } catch (error) {
-    console.error("[Webhook] Processing error:", error);
-    // Sempre retorna 200 para evitar retries infinitos do Asaas
-    return NextResponse.json({ received: true });
+  } catch {
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 },
+    );
   }
 }

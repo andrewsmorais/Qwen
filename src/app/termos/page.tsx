@@ -45,20 +45,20 @@ export default function TermosPage() {
           </ul>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">2. Estrutura de Preços, Planos e Faturamento</h2>
-          <p><strong className="text-slate-900">2.1.</strong> O serviço é disponibilizado mediante os seguintes níveis de planos comerciais divulgados na página oficial:</p>
-          <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
-            <li><strong className="text-slate-900 font-semibold">Plano Starter:</strong> Desenvolvido para autônomos e pequenas operações, contendo 1 conexão de WhatsApp, até 1 Agente de IA para atendimento, suporte via comunidade/tickets e limites base de tráfego de mensagens.</li>
-            <li><strong className="text-slate-900 font-semibold">Plano Pro (Mais Popular):</strong> Desenvolvido para empresas em expansão, contendo até 3 conexões de WhatsApp, múltiplos Agentes de IA customizados com base de conhecimento expandida, relatórios avançados de conversão e suporte prioritário.</li>
-            <li><strong className="text-slate-900 font-semibold">Plano Enterprise / Custom:</strong> Solução para alta volumetria, com múltiplas instâncias simultâneas, agentes ilimitados, maior capacidade computacional dedicada e suporte dedicado.</li>
-          </ul>
-          <p>
-            <strong className="text-slate-900">2.2. Periodicidade e Faturamento:</strong> As contratações operam no modelo pré-pago (mensal ou anual). O acesso é liberado mediante confirmação do meio de pagamento (Pix, Cartão de Crédito ou Boleto Bancário).
-          </p>
-          <p>
-            <strong className="text-slate-900">2.3. Renovação Automática:</strong> As assinaturas são renovadas de forma automática ao término de cada ciclo (30 dias para planos mensais ou 365 dias para anuais), sendo o valor debitado no método de pagamento cadastrado, salvo manifestação expressa de cancelamento antes da data de renovação.
-          </p>
-          <p>
-            <strong className="text-slate-900">2.4. Consumo de Recursos Computacionais e Tokens de IA:</strong> Planos com limites definidos de disparos ou consultas à IA utilizam cotas mensais. Caso o USUÁRIO atinja o teto estipulado para o ciclo, o serviço de IA poderá ter a velocidade limitada ou solicitar upgrade de plano.
+          <p><strong className="text-slate-900">2.1.</strong> O serviço é disponibilizado mediante os seguintes níveis de planos comerciais divulgados na página oficial, com precificação por atendente/mês e contratação mínima de atendentes por plano:</p>
+            <ul className="list-disc pl-6 space-y-3 mt-4 text-slate-700">
+              <li><strong className="text-slate-900 font-semibold">Plano Essencial:</strong> até 2 Números de WhatsApp, caixa de entrada compartilhada, CRM Kanban, fluxos de atendimento IA, agentes IA, base de conhecimento e relatórios essenciais. Contratação mínima de 2 atendentes.</li>
+              <li><strong className="text-slate-900 font-semibold">Plano Impulso:</strong> tudo do Essencial, mais: até 3 Números de WhatsApp, 5 pipelines de vendas, fluxos avançados e agendamento, campanhas em massa, distribuição automática de leads, agentes IA com processos, skills para IA, API e Webhooks e relatórios completos. Contratação mínima de 3 atendentes.</li>
+              <li><strong className="text-slate-900 font-semibold">Plano Escala:</strong> tudo do Impulso, mais: WhatsApps ilimitados, pipelines ilimitados, distribuição avançada, permissões avançadas, logs e auditoria, integrações avançadas para IA, multiunidade e multimarca, API aberta para chat customizado e atendimento Prime (VIP). Contratação mínima de 3 atendentes.</li>
+            </ul>
+            <p>
+              <strong className="text-slate-900">2.2. Ciclos e Periodicidade de Faturamento:</strong> as contratações operam no modelo pré-pago nos ciclos mensal, trimestral ou anual, com descontos progressivos nos ciclos maiores, conforme valores divulgados na página oficial. O acesso é liberado após o período de teste gratuito de 7 (sete) dias iniciado na assinatura, mediante confirmação do primeiro pagamento (Pix, cartão de crédito ou boleto bancário).
+            </p>
+            <p>
+              <strong className="text-slate-900">2.3. Renovação Automática:</strong> as assinaturas são renovadas de forma automática ao término de cada ciclo (30 dias para planos mensais, 90 dias para trimestrais ou 365 dias para anuais), sendo o valor debitado no método de pagamento cadastrado, salvo manifestação expressa de cancelamento antes da data de renovação.
+            </p>
+            <p>
+              <strong className="text-slate-900">2.4. Consumo de Recursos Computacionais e Tokens de IA:</strong> Planos com limites definidos de disparos ou consultas à IA utilizam cotas mensais. Caso o USUÁRIO atinja o teto estipulado para o ciclo, o serviço de IA poderá ter a velocidade limitada ou solicitar upgrade de plano.
           </p>
 
           <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">3. Conexões de WhatsApp e Responsabilidade de Terceiros</h2>
@@ -144,6 +144,11 @@ export default function TermosPage() {
           </p>
           <p>
             <strong className="text-slate-900">10.2.</strong> Para dirimir quaisquer litígios, conflitos ou controvérsias decorrentes deste contrato, as partes elegem expressamente o Foro da Comarca de Ubatuba, Estado de São Paulo, com renúncia a qualquer outro, por mais privilegiado que seja.
+          </p>
+        
+          <h2 className="text-2xl font-semibold text-slate-900 mt-12 mb-6">11. Cancelamento da assinatura</h2>
+          <p>
+            O cliente pode cancelar sua assinatura a qualquer momento, diretamente no painel (Configurações → Plano e cobrança) ou solicitando pelo suporte (WhatsApp ou e-mail de atendimento). O cancelamento no painel é imediato; quando solicitado pelo suporte, será efetivado em até 1 (um) dia útil. Em ambos os casos, sem qualquer penalidade além do período já contratado e pago, e o acesso permanece disponível até o fim do período pago. Solicitações feitas em até 7 (sete) dias após o primeiro pagamento terão reembolso integral do valor pago, nos termos do art. 49 do Código de Defesa do Consumidor.
           </p>
         </article>
       </div>
