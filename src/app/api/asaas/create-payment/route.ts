@@ -9,6 +9,7 @@ import {
 import crypto from "crypto";
 import { selecionarPlano } from "@/lib/planos";
 import { origemDoCartao } from "@/lib/asaas/origem-cartao";
+import { podeRecontratar } from "@/lib/recontratar";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -222,6 +223,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let recontratar: {
+      id: string;
+      status: string | null;
+      updated_at: string | null;
+    } | null = null;
+
     // 2. Verificação de Identidade e Isolamento de Organização (Correção P0 + Ajuste 1)
     if (targetOrgId) {
       // Caso 1: Usuário informou organization_id existente.
@@ -281,7 +288,9 @@ export async function POST(req: NextRequest) {
 
       const { data: anterior, error: anteriorError } = await supabase
         .from("subscriptions")
-        .select("id")
+        .select(
+          "id, status, current_period_end, asaas_subscription_id, updated_at",
+        )
         .eq("organization_id", targetOrgId)
         .limit(1)
         .maybeSingle();
@@ -290,14 +299,28 @@ export async function POST(req: NextRequest) {
           { error: "Não foi possível conferir sua assinatura." },
           { status: 503 },
         );
-      if (anterior)
-        return NextResponse.json(
-          {
-            error:
-              "Sua organização já possui uma assinatura. Gerencie-a em Plano e cobrança; uma segunda cobrança não foi criada.",
-          },
-          { status: 409 },
-        );
+      if (anterior) {
+        const veredito = podeRecontratar(anterior, new Date());
+        if (!veredito.pode)
+          return NextResponse.json(
+            {
+              error:
+                veredito.motivo === "em_atraso"
+                  ? 'Sua assinatura está com uma cobrança em aberto. Pague pelo botão "Pagar a fatura em aberto" no CRM (Plano e cobrança); uma segunda cobrança não foi criada.'
+                  : "Sua organização já possui uma assinatura. Gerencie-a em Plano e cobrança; uma segunda cobrança não foi criada.",
+              code: veredito.motivo,
+            },
+            { status: 409 },
+          );
+        // A linha anterior é REUSADA (mesmo id): a assinatura nova continua
+        // sendo uma por organização, e a troca abaixo é condicionada ao estado
+        // lido aqui — duas abas não recontratam duas vezes.
+        recontratar = {
+          id: anterior.id,
+          status: anterior.status,
+          updated_at: anterior.updated_at,
+        };
+      }
     } else {
       // Caso 2: Onboarding self-service de novo cliente.
       // Requer cadastro de identidade (Supabase Auth) e criação controlada de organização.
@@ -410,28 +433,60 @@ export async function POST(req: NextRequest) {
     reservationBytes[6] = (reservationBytes[6]! & 0x0f) | 0x40;
     reservationBytes[8] = (reservationBytes[8]! & 0x3f) | 0x80;
     const reservationHex = reservationBytes.toString("hex");
-    const reservationId = `${reservationHex.slice(0, 8)}-${reservationHex.slice(8, 12)}-${reservationHex.slice(12, 16)}-${reservationHex.slice(16, 20)}-${reservationHex.slice(20)}`;
+    const reservationId =
+      recontratar?.id ??
+      `${reservationHex.slice(0, 8)}-${reservationHex.slice(8, 12)}-${reservationHex.slice(12, 16)}-${reservationHex.slice(16, 20)}-${reservationHex.slice(20)}`;
     const now = new Date();
     const expiresAt = new Date(
       now.getTime() + 7 * 24 * 60 * 60 * 1000,
     ).toISOString();
-    const { error: reservaError } = await supabase
-      .from("subscriptions")
-      .insert({
-        id: reservationId,
-        organization_id: targetOrgId,
-        plan_id: planId,
-        plan_type: planSlug,
-        seats,
-        // suspended é válido no schema atual; a reserva não libera teste antes
-        // de o Asaas confirmar a criação. Não exige alteração de schema.
-        billing_cycle: billingCycle,
-        status: "suspended",
-        current_period_start: now.toISOString(),
-        current_period_end: expiresAt,
-        expires_at: expiresAt,
-        updated_at: now.toISOString(),
-      });
+    const camposDaReserva = {
+      organization_id: targetOrgId,
+      plan_id: planId,
+      plan_type: planSlug,
+      seats,
+      // suspended é válido no schema atual; a reserva não libera teste antes
+      // de o Asaas confirmar a criação. Não exige alteração de schema.
+      billing_cycle: billingCycle,
+      status: "suspended",
+      current_period_start: now.toISOString(),
+      current_period_end: expiresAt,
+      expires_at: expiresAt,
+      updated_at: now.toISOString(),
+    };
+    let reservaError: { code?: string } | null = null;
+    if (recontratar) {
+      // Troca condicionada ao estado lido: se outra aba já recontratou, zero linhas.
+      let troca = supabase
+        .from("subscriptions")
+        .update({
+          ...camposDaReserva,
+          asaas_subscription_id: null,
+          asaas_payment_id: null,
+          canceled_at: null,
+        })
+        .eq("id", recontratar.id)
+        .eq("organization_id", targetOrgId!);
+      troca =
+        recontratar.status === null
+          ? troca.is("status", null)
+          : troca.eq("status", recontratar.status);
+      troca =
+        recontratar.updated_at === null
+          ? troca.is("updated_at", null)
+          : troca.eq("updated_at", recontratar.updated_at);
+      const { data: trocadas, error } = await troca.select("id");
+      reservaError = error
+        ? error
+        : !trocadas || trocadas.length === 0
+          ? { code: "23505" }
+          : null;
+    } else {
+      const { error } = await supabase
+        .from("subscriptions")
+        .insert({ id: reservationId, ...camposDaReserva });
+      reservaError = error;
+    }
     if (reservaError)
       return NextResponse.json(
         {

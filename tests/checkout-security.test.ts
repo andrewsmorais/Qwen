@@ -359,6 +359,50 @@ describe("autorização e cadastro nas rotas reais", () => {
   });
 });
 
+describe("recontratar pela página (assinatura anterior da mesma organização)", () => {
+  const anterior = (over: Record<string, unknown>) => ({
+    id: "assinatura-anterior",
+    organization_id: ORG,
+    status: "canceled",
+    current_period_end: "2026-01-01T00:00:00.000Z",
+    asaas_subscription_id: "sub_antiga",
+    updated_at: "2026-01-01T00:00:00.000Z",
+    ...over,
+  });
+
+  it("cancelada e vencida: contrata de novo REUSANDO a mesma linha (uma assinatura por organização)", async () => {
+    m.subscription = anterior({});
+    const res = await checkout(request(base));
+    expect(res.status).toBe(200);
+    expect(m.createSubscription).toHaveBeenCalledOnce();
+    expect(m.subscription?.id).toBe("assinatura-anterior");
+    expect(m.inserts.filter((i) => i.table === "subscriptions")).toEqual([]);
+  });
+
+  it("em atraso: recusa com 409 e manda pagar a fatura — assinatura nova cobraria em dobro", async () => {
+    m.subscription = anterior({ status: "past_due", current_period_end: "2026-12-01T00:00:00.000Z" });
+    const res = await checkout(request(base));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ code: "em_atraso", error: expect.stringContaining("Pagar a fatura em aberto") });
+    expect(m.createSubscription).not.toHaveBeenCalled();
+  });
+
+  it("ativa: continua recusando", async () => {
+    m.subscription = anterior({ status: "active", current_period_end: "2099-01-01T00:00:00.000Z" });
+    const res = await checkout(request(base));
+    expect(res.status).toBe(409);
+    expect(m.createSubscription).not.toHaveBeenCalled();
+  });
+
+  it("outra aba recontratou no meio (estado mudou): zero linhas trocadas → 409, sem cobrança", async () => {
+    m.subscription = anterior({});
+    m.zeroUpdatedRows = true;
+    const res = await checkout(request(base));
+    expect(res.status).toBe(409);
+    expect(m.createSubscription).not.toHaveBeenCalled();
+  });
+});
+
 describe("contrato, período de teste e autoridade do preço na rota", () => {
   it("insere o vínculo de cobrança sem exigir UNIQUE da organização no schema", async () => {
     const res = await checkout(request(base));
