@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { CheckoutModal } from "./checkout/CheckoutModal";
+import { CRM_URL } from "@/lib/urls";
 
 type Period = 'mensal' | 'trimestral' | 'anual';
 
@@ -210,6 +211,16 @@ export function Pricing() {
                    >
                      Começar teste grátis
                    </button>
+                   <Link
+                     href={CRM_URL}
+                     className={`mt-3 w-full py-3 rounded-full text-center font-semibold text-sm block border transition-colors
+                        ${plan.highlight
+                         ? 'border-white/40 text-white hover:bg-white/10'
+                         : 'border-white/20 text-slate-200 hover:border-indigo-400 hover:text-white'
+                       }`}
+                   >
+                     Já sou cliente: entrar no CRM
+                   </Link>
                 </div>
 
                 <p className={`text-[10px] font-bold tracking-widest uppercase mb-4 ${plan.highlight ? 'text-indigo-300' : 'text-slate-400'}`}>
@@ -233,6 +244,9 @@ export function Pricing() {
           <p className="text-slate-400 text-sm">
             Todos os planos incluem <strong className="text-white">7 dias de teste grátis</strong>. Cancele quando quiser. Sem taxa de setup.
           </p>
+          <Link href={CRM_URL} className="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-8 py-3.5 rounded-full text-sm font-bold shadow-lg hover:opacity-90 transition-all">
+            Acessar o CRM
+          </Link>
         </div>
       </div>
 
