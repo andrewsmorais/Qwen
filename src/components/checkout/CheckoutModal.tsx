@@ -14,9 +14,10 @@ interface CheckoutModalProps {
   organizationId: string; // Vai ser injetado pelo componente que chama
   planType: "essencial" | "impulso" | "escala";
   planValue: number;
+  billingPeriod: "mensal" | "trimestral" | "anual";
 }
 
-export function CheckoutModal({ isOpen, onClose, organizationId, planType, planValue }: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose, organizationId, planType, planValue, billingPeriod }: CheckoutModalProps) {
   const router = useRouter();
   const [method, setMethod] = useState<PaymentMethod>("CREDIT_CARD");
   const [loading, setLoading] = useState(false);
@@ -160,6 +161,7 @@ export function CheckoutModal({ isOpen, onClose, organizationId, planType, planV
           customer_cpf_cnpj: customerForm.cpfCnpj,
           value: planValue,
           plan_type: planType,
+          billing_period: billingPeriod,
           billing_type: method,
           credit_card_token: creditCardToken,
           installment_count: cardForm.installments
