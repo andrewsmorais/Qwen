@@ -150,6 +150,35 @@ export async function POST(req: NextRequest) {
         { error: "Subscription changed; retry event" },
         { status: 503 },
       );
+    if (evento === "PAYMENT_REFUNDED") {
+      // Avisa o CRM, que escreve ao cliente "reembolso confirmado". Só o estorno
+      // (não a contestação) e só depois de a assinatura ter sido suspensa. É
+      // cortesia: falhar aqui nunca desfaz nem repete o que o webhook já gravou.
+      // O CRM deduplica por pagamento, então a reentrega do evento não duplica.
+      try {
+        await supabase.rpc("emit_event", {
+          p_event_type: "reembolso.confirmado",
+          p_entity_kind: "subscription",
+          p_entity_id: sub.id,
+          p_payload: {
+            payment_id:
+              typeof event?.payment?.id === "string" ? event.payment.id : null,
+            value:
+              typeof event?.payment?.value === "number"
+                ? event.payment.value
+                : null,
+            billing_type:
+              typeof event?.payment?.billingType === "string"
+                ? event.payment.billingType
+                : null,
+          },
+          p_metadata: { source: "asaas-webhook" },
+          p_organization_id: sub.organization_id,
+        });
+      } catch {
+        // sem aviso ao cliente; o reembolso em si já está registrado
+      }
+    }
     return NextResponse.json({ received: true });
   } catch {
     return NextResponse.json(

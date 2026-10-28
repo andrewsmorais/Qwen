@@ -16,6 +16,7 @@ const m = vi.hoisted(() => ({
   inserts: [] as { table: string; value: Record<string, unknown> }[],
   reservedIds: new Set<string>(),
   chamadas: [] as unknown[][],
+  rpcs: [] as { fn: string; args: Record<string, unknown> }[],
   criar: vi.fn(),
   createUser: vi.fn(),
   customer: vi.fn(),
@@ -33,6 +34,10 @@ vi.mock("@/lib/supabase", () => ({
     auth: {
       getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }),
       admin: { createUser: m.createUser },
+    },
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      m.rpcs.push({ fn, args });
+      return { data: null, error: null };
     },
     from: (table: string) => {
       let operation: "read" | "insert" | "update" | "upsert" = "read";
@@ -156,6 +161,7 @@ const secret = "segredo-exclusivo-de-teste-sem-valor-real";
 beforeEach(() => {
   vi.clearAllMocks();
   m.chamadas = [];
+  m.rpcs = [];
   m.updates = [];
   m.inserts = [];
   m.reservedIds.clear();
@@ -206,32 +212,29 @@ describe("checkout sem nenhuma chamada financeira real", () => {
     ["monthly", 149.9],
     ["quarterly", 404.73],
     ["yearly", 1439.04],
-  ])(
-    "Impulso %s cobra o ciclo completo do plano",
-    async (cycle, value) => {
-      const res = await checkout(
-        request({ ...body, billing_cycle: cycle, value: 0.01 }),
-      );
-      expect(res.status).toBe(200);
-      expect(m.criar).toHaveBeenCalledWith(
-        expect.objectContaining({ value, cycle: String(cycle).toUpperCase() }),
-      );
-      expect(m.updates[0]).toMatchObject({
-        organization_id: ORG,
-        plan_id: "plano",
-        plan_type: "impulso",
-        seats: 1,
-        status: "trialing",
-        asaas_payment_id: null,
-      });
-      expect(m.chamadas).toContainEqual([
-        "user_organizations",
-        "is",
-        "revoked_at",
-        null,
-      ]);
-    },
-  );
+  ])("Impulso %s cobra o ciclo completo do plano", async (cycle, value) => {
+    const res = await checkout(
+      request({ ...body, billing_cycle: cycle, value: 0.01 }),
+    );
+    expect(res.status).toBe(200);
+    expect(m.criar).toHaveBeenCalledWith(
+      expect.objectContaining({ value, cycle: String(cycle).toUpperCase() }),
+    );
+    expect(m.updates[0]).toMatchObject({
+      organization_id: ORG,
+      plan_id: "plano",
+      plan_type: "impulso",
+      seats: 1,
+      status: "trialing",
+      asaas_payment_id: null,
+    });
+    expect(m.chamadas).toContainEqual([
+      "user_organizations",
+      "is",
+      "revoked_at",
+      null,
+    ]);
+  });
   it("catálogo divergente falha antes de criar conta ou assinatura", async () => {
     m.plan.price_monthly = 24700;
     expect((await checkout(request(body))).status).toBe(503);
@@ -407,6 +410,21 @@ describe("webhook autenticado preserva o plano e acompanha a cobrança", () => {
       });
     },
   );
+  it("só o estorno avisa o CRM; a contestação não", async () => {
+    expect((await send("PAYMENT_REFUNDED")).status).toBe(200);
+    expect(m.rpcs).toHaveLength(1);
+    expect(m.rpcs[0]).toMatchObject({
+      fn: "emit_event",
+      args: {
+        p_event_type: "reembolso.confirmado",
+        p_entity_kind: "subscription",
+        p_organization_id: ORG,
+      },
+    });
+    m.rpcs = [];
+    expect((await send("PAYMENT_CHARGEBACK_REQUESTED")).status).toBe(200);
+    expect(m.rpcs).toHaveLength(0);
+  });
   it.each([
     ["PAYMENT_REFUNDED", "PAYMENT_CONFIRMED"],
     ["PAYMENT_CHARGEBACK_REQUESTED", "PAYMENT_RECEIVED"],
