@@ -1,10 +1,15 @@
 /**
- * Valores em centavos por atendente e por CICLO completo, iguais à oferta e à
+ * Valores em centavos por PLANO e por CICLO completo, iguais à oferta e à
  * tabela `plans` do Supabase (o checkout recusa a compra se divergirem).
  * Trimestral = 10% de desconto sobre 3 meses; anual = 20% sobre 12 meses.
  *
+ * Desde 27/10/2026 o preço é por plano, não por atendente: cada plano já traz
+ * os usuários da equipe (Essencial 2, Impulso 4, Escala a partir de 6) e o
+ * CRM conta a cota pelo próprio catálogo (`lib/billing/catalogo.ts` do CRM).
+ * `seats` segue existindo no pedido e na assinatura, sempre 1.
+ *
  * O Escala é sob consulta: o preço aparece como "a partir de", mas ele não se
- * contrata pelo checkout — a implantação da API oficial é combinada antes.
+ * contrata pelo checkout — o dono da plataforma ativa no CRM depois da proposta.
  */
 export const PLANOS = {
   essencial: {
@@ -17,7 +22,7 @@ export const PLANOS = {
   },
   impulso: {
     name: "Impulso",
-    min_attendants: 3,
+    min_attendants: 1,
     price_monthly: 14990,
     price_quarterly: 40473,
     price_yearly: 143904,
@@ -25,10 +30,10 @@ export const PLANOS = {
   },
   escala: {
     name: "Escala",
-    min_attendants: 5,
-    price_monthly: 21990,
-    price_quarterly: 59373,
-    price_yearly: 211104,
+    min_attendants: 1,
+    price_monthly: 34990,
+    price_quarterly: 94473,
+    price_yearly: 335904,
     sob_consulta: true,
   },
 } as const;
@@ -38,27 +43,17 @@ export type Ciclo = "monthly" | "quarterly" | "yearly";
 export function selecionarPlano(
   slug: unknown,
   ciclo: unknown,
-  attendants: unknown,
+  /** Legado (preço por atendente). Só aceita ausente ou 1. */
+  attendants?: unknown,
 ) {
   if (typeof slug !== "string" || !Object.hasOwn(PLANOS, slug))
     throw new Error("Selecione um plano válido.");
   if (ciclo !== "monthly" && ciclo !== "quarterly" && ciclo !== "yearly")
     throw new Error("Selecione um ciclo válido.");
+  if (attendants !== undefined && attendants !== null && attendants !== 1)
+    throw new Error("O preço agora é por plano: não há quantidade de atendentes.");
   const plano = PLANOS[slug as Plano];
-  const seats =
-    attendants === undefined || attendants === null
-      ? plano.min_attendants
-      : attendants;
-  if (
-    typeof seats !== "number" ||
-    !Number.isSafeInteger(seats) ||
-    seats < plano.min_attendants ||
-    seats > 1000
-  ) {
-    throw new Error(
-      `Informe uma quantidade inteira entre ${plano.min_attendants} e 1000 atendentes.`,
-    );
-  }
+  const seats = 1;
   return {
     slug: slug as Plano,
     ciclo,
@@ -66,6 +61,6 @@ export function selecionarPlano(
     plano,
     cycleCents: plano[`price_${ciclo}`],
     asaasCycle: ciclo.toUpperCase() as "MONTHLY" | "QUARTERLY" | "YEARLY",
-    value: (plano[`price_${ciclo}`] * seats) / 100,
+    value: plano[`price_${ciclo}`] / 100,
   };
 }

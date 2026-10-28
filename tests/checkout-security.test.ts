@@ -162,7 +162,6 @@ const base = {
   organization_id: ORG,
   plan_slug: "impulso",
   billing_cycle: "monthly",
-  attendants: 3,
   billing_type: "PIX",
   customer: {
     name: "Cliente Fictício",
@@ -468,7 +467,7 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
         request({ ...base, billing_type, credit_card_token: "token-ficticio" }),
       );
       expect(res.status).toBe(200);
-      expect(await res.json()).toMatchObject({ status: "trialing", seats: 3 });
+      expect(await res.json()).toMatchObject({ status: "trialing", seats: 1 });
       expect(m.subscription).toMatchObject({
         status: "trialing",
         asaas_payment_id: null,
@@ -493,18 +492,17 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
     expect(m.createSubscription).not.toHaveBeenCalled();
   });
   it.each([
-    ["essencial", "monthly", 2, 179.8, "MONTHLY"],
-    ["impulso", "quarterly", 4, 1618.92, "QUARTERLY"],
-    ["essencial", "yearly", 1, 863.04, "YEARLY"],
+    ["essencial", "monthly", 89.9, "MONTHLY"],
+    ["impulso", "quarterly", 404.73, "QUARTERLY"],
+    ["essencial", "yearly", 863.04, "YEARLY"],
   ] as const)(
-    "ignora preço do cliente: %s %s para %s atendentes",
-    async (plan_slug, billing_cycle, attendants, value, cycle) => {
+    "ignora preço do cliente: %s %s cobra o preço do plano",
+    async (plan_slug, billing_cycle, value, cycle) => {
       const res = await checkout(
         request({
           ...base,
           plan_slug,
           billing_cycle,
-          attendants,
           value: 0.01,
           price: 1,
         }),
@@ -514,7 +512,7 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
         expect.objectContaining({ value, cycle }),
       );
       expect(await res.json()).toMatchObject({
-        seats: attendants,
+        seats: 1,
         value,
         billing_cycle,
       });
@@ -522,15 +520,15 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
   );
   it("plano Escala é sob consulta: recusa antes de qualquer efeito", async () => {
     const res = await checkout(
-      request({ ...base, plan_slug: "escala", attendants: 5 }),
+      request({ ...base, plan_slug: "escala" }),
     );
     expect(res.status).toBe(400);
     expect(m.createSubscription).not.toHaveBeenCalled();
     expect(m.createUser).not.toHaveBeenCalled();
     expect(m.inserts).toEqual([]);
   });
-  it.each([0, 1, 2.5, "3"])(
-    "recusa mínimo insuficiente ou quantidade inválida %s",
+  it.each([0, 2, 2.5, "3"])(
+    "preço é por plano: recusa quantidade de atendentes %s",
     async (attendants) => {
       expect((await checkout(request({ ...base, attendants }))).status).toBe(
         400,

@@ -3,26 +3,22 @@ import assert from "node:assert/strict";
 import { PLANOS, selecionarPlano } from "./planos.ts";
 import { fimDoCiclo } from "./ciclo-assinatura.ts";
 
-for (const [slug, seats, prices] of [
-  ["essencial", 1, [8990, 24273, 86304]],
-  ["impulso", 3, [14990, 40473, 143904]],
-  ["escala", 5, [21990, 59373, 211104]],
+for (const [slug, prices] of [
+  ["essencial", [8990, 24273, 86304]],
+  ["impulso", [14990, 40473, 143904]],
+  ["escala", [34990, 94473, 335904]],
 ]) {
   for (const [index, cycle] of ["monthly", "quarterly", "yearly"].entries()) {
-    test(`${slug} ${cycle}: valor pelo ciclo completo e mínimo contratado`, () => {
-      assert.equal(
-        selecionarPlano(slug, cycle, undefined).value,
-        (prices[index] * seats) / 100,
-      );
-      assert.equal(
-        selecionarPlano(slug, cycle, seats + 1).value,
-        (prices[index] * (seats + 1)) / 100,
-      );
+    test(`${slug} ${cycle}: preço por plano, pelo ciclo completo`, () => {
+      const s = selecionarPlano(slug, cycle, undefined);
+      assert.equal(s.value, prices[index] / 100);
+      assert.equal(s.seats, 1);
+      assert.equal(selecionarPlano(slug, cycle, 1).value, prices[index] / 100);
     });
   }
 }
-for (const seats of [0, 1, -1, 1.5, Infinity, NaN, "3", 1001])
-  test(`recusa atendentes inválidos ${seats}`, () => {
+for (const seats of [0, 2, 3, -1, 1.5, Infinity, NaN, "3", 1001])
+  test(`recusa quantidade de atendentes ${seats} (preço é por plano)`, () => {
     assert.throws(() => selecionarPlano("impulso", "monthly", seats));
   });
 test("descontos: trimestral 10% e anual 20% sobre o mensal", () => {
@@ -37,8 +33,8 @@ test("só o Escala é sob consulta", () => {
   assert.equal(PLANOS.escala.sob_consulta, true);
 });
 test("não aceita plano ou ciclo inventados", () => {
-  assert.throws(() => selecionarPlano("__proto__", "monthly", 3));
-  assert.throws(() => selecionarPlano("impulso", "weekly", 3));
+  assert.throws(() => selecionarPlano("__proto__", "monthly"));
+  assert.throws(() => selecionarPlano("impulso", "weekly"));
 });
 test("pagamento renova pelo ciclo sem estourar o último dia do mês", () => {
   assert.equal(fimDoCiclo("2027-01-31", "monthly"), "2027-02-28T00:00:00.000Z");

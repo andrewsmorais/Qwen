@@ -144,7 +144,6 @@ const body = {
   organization_id: ORG,
   plan_slug: "impulso",
   billing_cycle: "monthly",
-  attendants: 3,
   billing_type: "PIX",
   customer: {
     name: "Cliente Teste",
@@ -172,7 +171,7 @@ beforeEach(() => {
   m.plan = {
     id: "plano",
     name: "Impulso",
-    min_attendants: 3,
+    min_attendants: 1,
     price_monthly: 14990,
     price_quarterly: 40473,
     price_yearly: 143904,
@@ -204,11 +203,11 @@ const request = (
 
 describe("checkout sem nenhuma chamada financeira real", () => {
   it.each([
-    ["monthly", 449.7],
-    ["quarterly", 1214.19],
-    ["yearly", 4317.12],
+    ["monthly", 149.9],
+    ["quarterly", 404.73],
+    ["yearly", 1439.04],
   ])(
-    "Impulso %s cobra ciclo completo para 3 atendentes",
+    "Impulso %s cobra o ciclo completo do plano",
     async (cycle, value) => {
       const res = await checkout(
         request({ ...body, billing_cycle: cycle, value: 0.01 }),
@@ -221,7 +220,7 @@ describe("checkout sem nenhuma chamada financeira real", () => {
         organization_id: ORG,
         plan_id: "plano",
         plan_type: "impulso",
-        seats: 3,
+        seats: 1,
         status: "trialing",
         asaas_payment_id: null,
       });
@@ -239,8 +238,8 @@ describe("checkout sem nenhuma chamada financeira real", () => {
     expect(m.criar).not.toHaveBeenCalled();
     expect(m.createUser).not.toHaveBeenCalled();
   });
-  it.each([1, 1.5, "3", 1001])(
-    "rejeita atendentes inválidos %s antes de efeito",
+  it.each([2, 3, 1.5, "3", 1001])(
+    "preço é por plano: rejeita quantidade de atendentes %s antes de efeito",
     async (attendants) => {
       expect((await checkout(request({ ...body, attendants }))).status).toBe(
         400,

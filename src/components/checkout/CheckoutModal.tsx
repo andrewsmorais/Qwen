@@ -32,7 +32,6 @@ interface CheckoutModalProps {
   organizationId?: string | null;
   planType: Plano;
   billingCycle: Ciclo;
-  attendants?: number;
 }
 
 export function CheckoutModal({
@@ -41,22 +40,18 @@ export function CheckoutModal({
   organizationId,
   planType,
   billingCycle,
-  attendants,
 }: CheckoutModalProps) {
   const [method, setMethod] = useState<PaymentMethod>("CREDIT_CARD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [attendantCount, setAttendantCount] = useState(
-    String(attendants ?? PLANOS[planType].min_attendants),
-  );
   const [paymentSessionToken, setPaymentSessionToken] = useState<string | null>(
     null,
   );
   let selecao: ReturnType<typeof selecionarPlano> | null = null;
   try {
-    selecao = selecionarPlano(planType, billingCycle, Number(attendantCount));
+    selecao = selecionarPlano(planType, billingCycle);
   } catch {
-    /* O formulário mostra a quantidade inválida antes de enviar. */
+    /* Plano ou ciclo inválido: o envio recusa com a mensagem do servidor. */
   }
 
   // Sucesso
@@ -142,11 +137,7 @@ export function CheckoutModal({
 
     try {
       // Conferir plano e quantidade antes de qualquer tokenização ou cobrança.
-      const selecaoDoPedido = selecionarPlano(
-        planType,
-        billingCycle,
-        Number(attendantCount),
-      );
+      const selecaoDoPedido = selecionarPlano(planType, billingCycle);
       if (method === "DEBIT_CARD")
         throw new Error(
           "Débito indisponível para assinaturas. Selecione outra forma de pagamento.",
@@ -419,38 +410,14 @@ export function CheckoutModal({
             {/* FORMULÁRIO COMPLETO */}
             <form onSubmit={handleCheckout}>
               <div className="mb-8">
-                <label
-                  htmlFor="checkout-attendants"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  Quantidade de atendentes humanos
-                </label>
-                <input
-                  id="checkout-attendants"
-                  type="number"
-                  required
-                  min={PLANOS[planType].min_attendants}
-                  max={1000}
-                  step={1}
-                  value={attendantCount}
-                  disabled={loading}
-                  onChange={(e) => setAttendantCount(e.target.value)}
-                  aria-describedby="checkout-plan-summary"
-                  className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500 transition-all"
-                />
                 <p
                   id="checkout-plan-summary"
-                  className="text-sm text-slate-500 mt-2"
+                  className="text-sm text-slate-500"
                   aria-live="polite"
                 >
-                  Mínimo de {PLANOS[planType].min_attendants}{" "}
-                  {PLANOS[planType].min_attendants === 1
-                    ? "atendente"
-                    : "atendentes"}
-                  .{" "}
                   {selecao
-                    ? `Total para ${selecao.seats} ${selecao.seats === 1 ? "atendente" : "atendentes"}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
-                    : "Informe uma quantidade inteira válida para conferir o total."}
+                    ? `Plano ${selecao.plano.name}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
+                    : "Não foi possível conferir o plano escolhido."}
                 </p>
               </div>
 
@@ -673,8 +640,7 @@ export function CheckoutModal({
                     <strong>Aviso importante:</strong> Seu cartão{" "}
                     <strong>NÃO</strong> será cobrado hoje. A cobrança de{" "}
                     {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]}, para {selecao.seats}{" "}
-                    atendentes, ocorrerá apenas após o fim do seu período de
+                    {nomeDoCiclo[billingCycle]} ocorrerá apenas após o fim do seu período de
                     teste grátis (7 dias). Você pode cancelar a qualquer momento
                     antes disso.
                   </div>
@@ -683,8 +649,7 @@ export function CheckoutModal({
                   <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
                     <strong>Aviso importante:</strong> Será gerada uma fatura de{" "}
                     {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]}, para {selecao.seats}{" "}
-                    atendentes, com vencimento após os 7 dias de teste grátis.
+                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias de teste grátis.
                     Seu{" "}
                     <strong>
                       acesso de teste será liberado após a confirmação do
