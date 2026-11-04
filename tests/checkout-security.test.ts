@@ -39,7 +39,8 @@ vi.mock("@/lib/supabase", () => ({
       admin: { createUser: m.createUser, deleteUser: m.deleteUser },
     },
     from: (table: string) => {
-      let operation: "read" | "insert" | "update" | "upsert" | "delete" = "read";
+      let operation: "read" | "insert" | "update" | "upsert" | "delete" =
+        "read";
       let input: Record<string, unknown> = {};
       const filters: [string, unknown][] = [];
       let result: { data: unknown; error: { code: string } | null } | undefined;
@@ -427,15 +428,24 @@ describe("recontratar pela página (assinatura anterior da mesma organização)"
   });
 
   it("em atraso: recusa com 409 e manda pagar a fatura — assinatura nova cobraria em dobro", async () => {
-    m.subscription = anterior({ status: "past_due", current_period_end: "2026-12-01T00:00:00.000Z" });
+    m.subscription = anterior({
+      status: "past_due",
+      current_period_end: "2026-12-01T00:00:00.000Z",
+    });
     const res = await checkout(request(base));
     expect(res.status).toBe(409);
-    expect(await res.json()).toMatchObject({ code: "em_atraso", error: expect.stringContaining("Pagar a fatura em aberto") });
+    expect(await res.json()).toMatchObject({
+      code: "em_atraso",
+      error: expect.stringContaining("Pagar a fatura em aberto"),
+    });
     expect(m.createSubscription).not.toHaveBeenCalled();
   });
 
   it("ativa: continua recusando", async () => {
-    m.subscription = anterior({ status: "active", current_period_end: "2099-01-01T00:00:00.000Z" });
+    m.subscription = anterior({
+      status: "active",
+      current_period_end: "2099-01-01T00:00:00.000Z",
+    });
     const res = await checkout(request(base));
     expect(res.status).toBe(409);
     expect(m.createSubscription).not.toHaveBeenCalled();
@@ -567,9 +577,7 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
     },
   );
   it("plano Escala é sob consulta: recusa antes de qualquer efeito", async () => {
-    const res = await checkout(
-      request({ ...base, plan_slug: "escala" }),
-    );
+    const res = await checkout(request({ ...base, plan_slug: "escala" }));
     expect(res.status).toBe(400);
     expect(m.createSubscription).not.toHaveBeenCalled();
     expect(m.createUser).not.toHaveBeenCalled();

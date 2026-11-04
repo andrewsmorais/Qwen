@@ -401,7 +401,9 @@ export async function POST(req: NextRequest) {
         cnpj: cleanCpfCnpj as string | null,
         status: "active",
       };
-      let { error: orgError } = await supabase.from("organizations").insert(novaOrganizacao);
+      let { error: orgError } = await supabase
+        .from("organizations")
+        .insert(novaOrganizacao);
       // 23505 aqui é o CNPJ: `id` é UUID novo e o `slug` leva o instante.
       if (orgError && (orgError as { code?: string }).code === "23505") {
         ({ error: orgError } = await supabase
