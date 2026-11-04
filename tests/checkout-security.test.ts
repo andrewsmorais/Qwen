@@ -17,6 +17,9 @@ const m = vi.hoisted(() => ({
   inserts: [] as { table: string; data: Record<string, unknown> }[],
   updates: [] as Record<string, unknown>[],
   createUser: vi.fn(),
+  deleteUser: vi.fn(),
+  orgInsertCodes: [] as string[],
+  deletes: [] as string[],
   customer: vi.fn(),
   createSubscription: vi.fn(),
   payments: vi.fn(),
@@ -33,10 +36,10 @@ vi.mock("@/lib/supabase", () => ({
   createSupabaseAdmin: () => ({
     auth: {
       getUser: async () => ({ data: { user: m.user }, error: null }),
-      admin: { createUser: m.createUser },
+      admin: { createUser: m.createUser, deleteUser: m.deleteUser },
     },
     from: (table: string) => {
-      let operation: "read" | "insert" | "update" | "upsert" = "read";
+      let operation: "read" | "insert" | "update" | "upsert" | "delete" = "read";
       let input: Record<string, unknown> = {};
       const filters: [string, unknown][] = [];
       let result: { data: unknown; error: { code: string } | null } | undefined;
@@ -46,8 +49,16 @@ vi.mock("@/lib/supabase", () => ({
           result = { data, error: code ? { code } : null };
           return result;
         };
+        if (operation === "delete") {
+          m.deletes.push(table);
+          return finish(null);
+        }
         if (operation === "insert") {
           m.inserts.push({ table, data: structuredClone(input) });
+          if (table === "organizations" && m.orgInsertCodes.length > 0) {
+            const code = m.orgInsertCodes.shift();
+            if (code) return finish(null, code);
+          }
           if (table === "asaas_customers") {
             if (m.customerInsertError)
               return finish(null, m.customerInsertError);
@@ -138,6 +149,10 @@ vi.mock("@/lib/supabase", () => ({
           input = data;
           return q;
         },
+        delete: () => {
+          operation = "delete";
+          return q;
+        },
         update: (data: Record<string, unknown>) => {
           operation = "update";
           input = data;
@@ -200,6 +215,9 @@ beforeEach(() => {
   m.queries = [];
   m.inserts = [];
   m.updates = [];
+  m.orgInsertCodes = [];
+  m.deletes = [];
+  m.deleteUser.mockResolvedValue({ data: null, error: null });
   m.createUser.mockResolvedValue({
     data: { user: { id: NEW_USER } },
     error: null,
@@ -355,6 +373,36 @@ describe("autorização e cadastro nas rotas reais", () => {
         email_confirm: true,
       }),
     );
+  });
+});
+
+describe("cadastro pela página não deixa conta órfã nem trava por CNPJ alheio", () => {
+  const cadastro = () =>
+    checkout(
+      request({
+        ...base,
+        organization_id: undefined,
+        password: "senha-exclusiva-de-teste",
+        company_name: "Empresa Fictícia",
+      }),
+    );
+
+  it("CNPJ já gravado em outra organização: a conta nasce sem ele e o cadastro segue", async () => {
+    m.orgInsertCodes = ["23505"];
+    const res = await cadastro();
+    expect(res.status).toBe(200);
+    const orgs = m.inserts.filter(({ table }) => table === "organizations");
+    expect(orgs).toHaveLength(2);
+    expect(orgs[1]!.data.cnpj).toBeNull();
+    expect(m.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("organização não criada: a conta recém-criada é apagada (sem 409 eterno depois)", async () => {
+    m.orgInsertCodes = ["23505", "23505"];
+    const res = await cadastro();
+    expect(res.status).toBe(500);
+    expect(m.deleteUser).toHaveBeenCalledWith(NEW_USER);
+    expect(m.createSubscription).not.toHaveBeenCalled();
   });
 });
 

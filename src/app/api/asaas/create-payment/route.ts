@@ -381,17 +381,36 @@ export async function POST(req: NextRequest) {
           .slice(0, 30) || "org";
       const orgSlug = `${slugBase}-${Date.now().toString(36)}`;
 
-      // Cria a organização
-      const { error: orgError } = await supabase.from("organizations").insert({
+      // Se algo abaixo falhar, a conta recém-criada SAI junto. Antes ela ficava
+      // confirmada e sem organização: o cliente recebia 500, depois 409
+      // "conta_existente" em toda nova tentativa, e só o operador destravava.
+      const desfazerConta = async () => {
+        await supabase.auth.admin.deleteUser(newUserId).catch(() => undefined);
+      };
+
+      // Cria a organização. O CPF/CNPJ é ÚNICO no CRM, mas aqui ninguém prova
+      // que é dono dele: quem gravasse primeiro o CNPJ público de uma empresa
+      // travava o cadastro dela. Se o número já está em outra organização, a
+      // conta nasce sem ele (o cliente o ajusta depois, e a cobrança no Asaas
+      // segue com o documento informado).
+      const novaOrganizacao = {
         id: newOrgId,
         slug: orgSlug,
         legal_name: body.company_name || customerName,
         display_name: body.company_name || customerName,
-        cnpj: cleanCpfCnpj,
+        cnpj: cleanCpfCnpj as string | null,
         status: "active",
-      });
+      };
+      let { error: orgError } = await supabase.from("organizations").insert(novaOrganizacao);
+      // 23505 aqui é o CNPJ: `id` é UUID novo e o `slug` leva o instante.
+      if (orgError && (orgError as { code?: string }).code === "23505") {
+        ({ error: orgError } = await supabase
+          .from("organizations")
+          .insert({ ...novaOrganizacao, cnpj: null }));
+      }
 
       if (orgError) {
+        await desfazerConta();
         return NextResponse.json(
           { error: "Erro ao criar organização no banco de dados" },
           { status: 500 },
@@ -408,6 +427,8 @@ export async function POST(req: NextRequest) {
         });
 
       if (memError) {
+        await supabase.from("organizations").delete().eq("id", newOrgId);
+        await desfazerConta();
         return NextResponse.json(
           { error: "Erro ao vincular administrador à organização" },
           { status: 500 },
