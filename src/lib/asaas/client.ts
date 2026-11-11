@@ -218,6 +218,21 @@ export async function deleteSubscription(id: string) {
   return handleResponse<{ deleted: boolean; id: string }>(res);
 }
 
+/**
+ * Muda o valor da recorrência (troca de plano, CRM 0508). `updatePendingPayments`
+ * leva o valor novo também à cobrança do próximo período que o Asaas já gerou.
+ */
+export async function updateSubscriptionValue(id: string, value: number) {
+  if (!/^sub_[A-Za-z0-9_]+$/.test(id) || !(value > 0))
+    throw new Error("Assinatura ou valor inválido.");
+  const res = await fetch(`${ASAAS_BASE_URL}/v3/subscriptions/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify({ value, updatePendingPayments: true }),
+  });
+  return handleResponse<{ id: string; value: number }>(res);
+}
+
 export async function getSubscriptionPayments(id: string) {
   const res = await fetch(`${ASAAS_BASE_URL}/v3/subscriptions/${id}/payments`, {
     headers: getHeaders(),

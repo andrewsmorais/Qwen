@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase";
 import { fimDoCiclo } from "@/lib/ciclo-assinatura";
+import { updateSubscriptionValue } from "@/lib/asaas/client";
+import {
+  LIMPA_TROCA,
+  downgradeVenceu,
+  ehCobrancaDeTroca,
+  planoDoCatalogo,
+  valorDoCiclo,
+} from "@/lib/troca-de-plano";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -17,6 +25,9 @@ export async function POST(req: NextRequest) {
   try {
     const event = await req.json();
     const evento = event?.event;
+    // Cobrança avulsa da diferença de uma troca de plano pedida no CRM.
+    if (ehCobrancaDeTroca(event?.payment))
+      return await tratarCobrancaDeTroca(evento, event.payment.id);
     const subId = event?.payment?.subscription ?? event?.subscription?.id;
     if (typeof subId !== "string" || !subId.startsWith("sub_")) {
       return NextResponse.json({ received: true, matched: false });
@@ -27,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { data: sub, error: lookupError } = await supabase
       .from("subscriptions")
       .select(
-        "id, organization_id, billing_cycle, current_period_start, current_period_end, status, canceled_at, updated_at",
+        "id, organization_id, billing_cycle, current_period_start, current_period_end, status, canceled_at, updated_at, troca_tipo, troca_plano, troca_efetiva_em",
       )
       .eq("asaas_subscription_id", subId)
       .maybeSingle();
@@ -65,6 +76,25 @@ export async function POST(req: NextRequest) {
       update.current_period_start = dueDate + "T00:00:00.000Z";
       update.current_period_end = fim;
       update.expires_at = fim;
+      // Downgrade pedido no CRM e agendado para este período: a assinatura
+      // passa a dizer o plano menor (o valor da recorrência já foi trocado
+      // quando o cliente pediu).
+      if (downgradeVenceu(sub, dueDate)) {
+        const plano = await planoDoCatalogo(supabase, sub.troca_plano);
+        const valor = plano ? valorDoCiclo(plano, sub.billing_cycle) : null;
+        if (!plano || !valor)
+          return NextResponse.json(
+            { error: "Plan lookup failed" },
+            { status: 503 },
+          );
+        Object.assign(update, LIMPA_TROCA, {
+          plan_id: plano.id,
+          plan_type: sub.troca_plano,
+          contracted_amount_cents: valor,
+          contracted_at: new Date().toISOString(),
+          price_source: "catalogo",
+        });
+      }
       if (typeof event.payment.id === "string")
         update.asaas_payment_id = event.payment.id;
     } else if (evento === "PAYMENT_OVERDUE") {
@@ -186,4 +216,89 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+/**
+ * A cobrança avulsa da diferença (upgrade pedido no CRM). A assinatura é
+ * achada pelo id da cobrança que o CRM gravou — nunca pelo externalReference.
+ */
+async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
+  const supabase = createSupabaseAdmin();
+  const { data: sub, error } = await supabase
+    .from("subscriptions")
+    .select(
+      "id, organization_id, asaas_subscription_id, billing_cycle, troca_tipo, troca_plano",
+    )
+    .eq("troca_pagamento_id", pagamentoId)
+    .maybeSingle();
+  if (error)
+    return NextResponse.json(
+      { error: "Subscription lookup failed" },
+      { status: 503 },
+    );
+  // Já aplicada (reentrega) ou desistida: nada a fazer.
+  if (!sub) return NextResponse.json({ received: true, matched: false });
+
+  if (
+    evento === "PAYMENT_OVERDUE" ||
+    evento === "PAYMENT_DELETED" ||
+    evento === "PAYMENT_REFUNDED" ||
+    evento === "PAYMENT_CHARGEBACK_REQUESTED"
+  ) {
+    // A diferença não entrou: o pedido some e o cliente segue no plano de antes.
+    const { error: limpar } = await supabase
+      .from("subscriptions")
+      .update({ ...LIMPA_TROCA, updated_at: new Date().toISOString() })
+      .eq("organization_id", sub.organization_id)
+      .eq("id", sub.id)
+      .eq("troca_pagamento_id", pagamentoId);
+    if (limpar)
+      return NextResponse.json(
+        { error: "Subscription update failed" },
+        { status: 503 },
+      );
+    return NextResponse.json({ received: true });
+  }
+  if (evento !== "PAYMENT_CONFIRMED" && evento !== "PAYMENT_RECEIVED")
+    return NextResponse.json({ received: true });
+  if (
+    sub.troca_tipo !== "upgrade" ||
+    (sub.troca_plano !== "essencial" && sub.troca_plano !== "impulso")
+  )
+    return NextResponse.json({ received: true, matched: false });
+
+  const plano = await planoDoCatalogo(supabase, sub.troca_plano);
+  const valor = plano ? valorDoCiclo(plano, sub.billing_cycle) : null;
+  if (!plano || !valor || typeof sub.asaas_subscription_id !== "string")
+    return NextResponse.json({ error: "Plan lookup failed" }, { status: 503 });
+  // Primeiro a recorrência (idempotente: a reentrega repete o mesmo valor),
+  // depois a assinatura. Se o banco falhar, o Asaas reentrega e tudo se repete.
+  try {
+    await updateSubscriptionValue(sub.asaas_subscription_id, valor / 100);
+  } catch {
+    return NextResponse.json(
+      { error: "Subscription value update failed" },
+      { status: 503 },
+    );
+  }
+  const { error: gravar } = await supabase
+    .from("subscriptions")
+    .update({
+      ...LIMPA_TROCA,
+      plan_id: plano.id,
+      plan_type: sub.troca_plano,
+      contracted_amount_cents: valor,
+      contracted_at: new Date().toISOString(),
+      price_source: "catalogo",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("organization_id", sub.organization_id)
+    .eq("id", sub.id)
+    .eq("troca_pagamento_id", pagamentoId);
+  if (gravar)
+    return NextResponse.json(
+      { error: "Subscription update failed" },
+      { status: 503 },
+    );
+  return NextResponse.json({ received: true });
 }
