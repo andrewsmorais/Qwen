@@ -22,6 +22,8 @@ const m = vi.hoisted(() => ({
   customer: vi.fn(),
   payments: vi.fn(),
   pix: vi.fn(),
+  /** Outras organizações com o mesmo documento que já contrataram. */
+  outrasEmpresas: [] as { id: string }[],
 }));
 vi.mock("@/lib/asaas/client", () => ({
   createSubscription: m.criar,
@@ -84,6 +86,8 @@ vi.mock("@/lib/supabase", () => ({
           m.subscription = { ...current, ...structuredClone(value) };
           return finish([{ id: current.id }]);
         }
+        if (table === "organizations")
+          return finish(structuredClone(m.outrasEmpresas));
         if (table === "plans")
           return finish(
             structuredClone(m.plan),
@@ -116,6 +120,9 @@ vi.mock("@/lib/supabase", () => ({
           return q;
         },
         limit: () => q,
+        // histórico do documento (teste grátis): nenhuma outra empresa contratou
+        neq: () => q,
+        not: () => q,
         maybeSingle: async () => execute(),
         insert: (input: Record<string, unknown>) => {
           operation = "insert";
@@ -174,6 +181,7 @@ beforeEach(() => {
   m.customerSaveError = false;
   m.zeroUpdatedRows = false;
   m.updateError = false;
+  m.outrasEmpresas = [];
   m.plan = {
     id: "plano",
     name: "Impulso",
@@ -206,6 +214,26 @@ const request = (
     body: JSON.stringify(data),
     headers: { "content-type": "application/json", ...headers },
   });
+
+describe("um teste grátis por empresa (11/11/2026)", () => {
+  it("documento que já contratou em outra organização: sem 7 dias, cobrança hoje e status pending", async () => {
+    m.outrasEmpresas = [{ id: "outra-org" }];
+    const res = await checkout(request(body));
+    expect(res.status).toBe(200);
+    const hoje = new Date().toISOString().split("T")[0];
+    expect(m.criar).toHaveBeenCalledWith(expect.objectContaining({ nextDueDate: hoje }));
+    expect(m.updates[0]).toMatchObject({ status: "pending" });
+    expect(await res.json()).toMatchObject({ status: "pending" });
+  });
+
+  it("controle: documento novo ganha os 7 dias (trialing, cobrança daqui a 7 dias)", async () => {
+    const res = await checkout(request(body));
+    expect(res.status).toBe(200);
+    const em7 = new Date(Date.now() + 7 * 86_400_000).toISOString().split("T")[0];
+    expect(m.criar).toHaveBeenCalledWith(expect.objectContaining({ nextDueDate: em7 }));
+    expect(m.updates[0]).toMatchObject({ status: "trialing" });
+  });
+});
 
 describe("checkout sem nenhuma chamada financeira real", () => {
   it.each([

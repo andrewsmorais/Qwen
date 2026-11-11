@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   CreditCard,
   QrCode,
@@ -56,6 +56,9 @@ export function CheckoutModal({
 
   // Sucesso
   const [isSuccess, setIsSuccess] = useState(false);
+  /** O teste grátis é um por empresa: sem ele, a primeira cobrança vence hoje. */
+  const [comTeste, setComTeste] = useState(true);
+  const { ligado: captchaLigado, definirCaixa, token: tokenHumano } = useTurnstile(isOpen);
 
   // User Info Form (Preenchido na tela principal)
   const [customerForm, setCustomerForm] = useState({
@@ -206,6 +209,7 @@ export function CheckoutModal({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            turnstile_token: await tokenHumano(),
             customer: {
               name: customerForm.name,
               email: customerForm.email,
@@ -275,11 +279,12 @@ export function CheckoutModal({
         );
       }
 
-      const pedir = () =>
+      const pedir = async () =>
         fetch("/api/asaas/create-payment", {
           method: "POST",
           headers: reqHeaders,
           body: JSON.stringify({
+            turnstile_token: await tokenHumano(),
             organization_id: organizationId || undefined,
             plan_slug: planType,
             billing_cycle: billingCycle,
@@ -333,6 +338,7 @@ export function CheckoutModal({
       if (!payRes.ok || (!payData.success && !payData.ok)) {
         throw new Error(payData.error || "Erro ao processar assinatura");
       }
+      setComTeste(payData.status !== "pending");
 
       if (method === "PIX") {
         setPixData({
@@ -376,11 +382,12 @@ export function CheckoutModal({
               <Check className="w-10 h-10" />
             </div>
             <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              Teste grátis de 7 dias ativado!
+              {comTeste ? "Teste grátis de 7 dias ativado!" : "Plano registrado!"}
             </h2>
             <p className="text-slate-600 mb-8 text-lg">
-              Seu plano foi registrado. Entre no CRM com o e-mail e a senha da
-              sua conta para configurar seu agente.
+              {comTeste
+                ? "Seu plano foi registrado. Entre no CRM com o e-mail e a senha da sua conta para configurar seu agente."
+                : "Este CPF/CNPJ já usou o teste grátis, então a primeira cobrança vence hoje. Assim que ela for paga, o CRM é liberado — entre com o e-mail e a senha da sua conta."}
             </p>
             <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -406,9 +413,14 @@ export function CheckoutModal({
                 {error}
               </div>
             )}
+            <p className="mb-6 text-xs text-slate-500">
+              O teste grátis é um por empresa (CPF/CNPJ). Quem já contratou paga a
+              primeira cobrança no ato.
+            </p>
 
             {/* FORMULÁRIO COMPLETO */}
             <form onSubmit={handleCheckout}>
+              {captchaLigado ? <div ref={definirCaixa} className="mb-6" /> : null}
               <div className="mb-8">
                 <p
                   id="checkout-plan-summary"
@@ -641,15 +653,16 @@ export function CheckoutModal({
                     <strong>NÃO</strong> será cobrado hoje. A cobrança de{" "}
                     {moeda.format(selecao.value)} por{" "}
                     {nomeDoCiclo[billingCycle]} ocorrerá apenas após o fim do seu período de
-                    teste grátis (7 dias). Você pode cancelar a qualquer momento
-                    antes disso.
+                    teste grátis (7 dias), se este CPF/CNPJ ainda não usou o
+                    teste. Você pode cancelar a qualquer momento antes disso.
                   </div>
                 )}
                 {(method === "PIX" || method === "BOLETO") && selecao && (
                   <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
                     <strong>Aviso importante:</strong> Será gerada uma fatura de{" "}
                     {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias de teste grátis.
+                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias de teste grátis
+                    (ou hoje, se este CPF/CNPJ já usou o teste).
                     Seu{" "}
                     <strong>
                       acesso de teste será liberado após a confirmação do
@@ -740,4 +753,77 @@ export function CheckoutModal({
       </div>
     </div>
   );
+}
+
+type Turnstile = {
+  render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+  reset: (id: string) => void;
+  getResponse: (id: string) => string | undefined;
+};
+
+/**
+ * CAPTCHA do Cloudflare Turnstile, só quando a página foi publicada com
+ * `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Cada chamada ao servidor gasta um token (é
+ * de uso único), então `token()` reinicia o widget e espera o próximo. Sem a
+ * chave, devolve `undefined` e o servidor também não exige.
+ */
+function useTurnstile(aberto: boolean) {
+  const chave = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  const caixa = useRef<HTMLDivElement | null>(null);
+  const widget = useRef<string | null>(null);
+  const espera = useRef<((t: string) => void) | null>(null);
+  const atual = useRef<string | null>(null);
+  const usado = useRef(false);
+
+  useEffect(() => {
+    if (!chave || !aberto) return;
+    const montar = () => {
+      const ts = (window as unknown as { turnstile?: Turnstile }).turnstile;
+      if (!ts || !caixa.current || widget.current) return;
+      widget.current = ts.render(caixa.current, {
+        sitekey: chave,
+        callback: (t: string) => {
+          atual.current = t;
+          usado.current = false;
+          espera.current?.(t);
+          espera.current = null;
+        },
+      });
+    };
+    if ((window as unknown as { turnstile?: Turnstile }).turnstile) montar();
+    else {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.onload = montar;
+      document.head.appendChild(script);
+    }
+    return () => {
+      widget.current = null;
+      atual.current = null;
+    };
+  }, [chave, aberto]);
+
+  const token = useCallback(async (): Promise<string | undefined> => {
+    if (!chave) return undefined;
+    const ts = (window as unknown as { turnstile?: Turnstile }).turnstile;
+    if (atual.current && !usado.current) {
+      usado.current = true;
+      return atual.current;
+    }
+    if (ts && widget.current) ts.reset(widget.current);
+    atual.current = null;
+    const novo = await new Promise<string | undefined>((resolve) => {
+      espera.current = resolve;
+      setTimeout(() => resolve(undefined), 15000);
+    });
+    usado.current = true;
+    return novo;
+  }, [chave]);
+
+  // Ref de callback: o componente recebe uma função, não o objeto da ref.
+  const definirCaixa = useCallback((el: HTMLDivElement | null) => {
+    caixa.current = el;
+  }, []);
+  return { ligado: Boolean(chave), definirCaixa, token };
 }

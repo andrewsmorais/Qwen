@@ -10,15 +10,21 @@ import crypto from "crypto";
 import { selecionarPlano } from "@/lib/planos";
 import { origemDoCartao } from "@/lib/asaas/origem-cartao";
 import { podeRecontratar } from "@/lib/recontratar";
+import { exigirHumano, limitarPorOrigem } from "@/lib/protecao-do-checkout";
+import { primeiraCobranca, temDireitoAoTeste } from "@/lib/teste-gratis";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function POST(req: NextRequest) {
   try {
+    const limitado = limitarPorOrigem(req, "create-payment");
+    if (limitado) return limitado;
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body))
       return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
+    const semProva = await exigirHumano(req, (body as Record<string, unknown>).turnstile_token);
+    if (semProva) return semProva;
     for (const value of [
       body.plan_slug,
       body.plan_type,
@@ -388,11 +394,10 @@ export async function POST(req: NextRequest) {
         await supabase.auth.admin.deleteUser(newUserId).catch(() => undefined);
       };
 
-      // Cria a organização. O CPF/CNPJ é ÚNICO no CRM, mas aqui ninguém prova
-      // que é dono dele: quem gravasse primeiro o CNPJ público de uma empresa
-      // travava o cadastro dela. Se o número já está em outra organização, a
-      // conta nasce sem ele (o cliente o ajusta depois, e a cobrança no Asaas
-      // segue com o documento informado).
+      // Cria a organização. O CPF/CNPJ deixou de ser único no CRM (migration
+      // 0507: uma empresa pode ter mais de uma conta, como na Umbler); ele
+      // decide só o teste grátis, mais abaixo. O retry sem documento fica para
+      // banco que ainda não aplicou a 0507.
       const novaOrganizacao = {
         id: newOrgId,
         slug: orgSlug,
@@ -577,10 +582,29 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // 5. Criação de Assinatura no Asaas (Trial de 7 dias)
-    const nextDueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
+    // 5. Criação de Assinatura no Asaas. Teste de 7 dias: UM por empresa
+    // (`lib/teste-gratis.ts`). Recontratação, ou documento que já contratou em
+    // outra organização, paga a primeira cobrança no ato.
+    const { data: mesmasEmpresas, error: historicoError } = await supabase
+      .from("organizations")
+      .select("id, subscriptions!inner(asaas_subscription_id)")
+      .eq("cnpj", cleanCpfCnpj)
+      .neq("id", targetOrgId)
+      .not("subscriptions.asaas_subscription_id", "is", null)
+      .limit(1);
+    if (historicoError)
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível conferir o histórico do documento. Nenhuma assinatura foi criada no Asaas.",
+        },
+        { status: 503 },
+      );
+    const comTeste = temDireitoAoTeste({
+      recontratacao: Boolean(recontratar),
+      outrasComAssinatura: mesmasEmpresas?.length ?? 0,
+    });
+    const nextDueDate = primeiraCobranca(comTeste, now);
 
     const subParams: Parameters<typeof createSubscription>[0] = {
       customer: asaasCustomerId,
@@ -602,7 +626,9 @@ export async function POST(req: NextRequest) {
     // 6. Registro no Supabase (Status conforme Ajuste 2: trialing ou pending, NUNCA active)
     // O teste de sete dias faz parte do contrato de todos os meios. A primeira
     // cobrança só vence depois dele; criar assinatura não confirma pagamento.
-    const initialStatus = "trialing";
+    // Sem teste, a organização espera a primeira cobrança ser paga (o webhook a
+    // marca ativa); o CRM mostra o botão de pagar a fatura em aberto.
+    const initialStatus = comTeste ? "trialing" : "pending";
 
     const subscriptionPayload: Record<string, unknown> = {
       organization_id: targetOrgId,

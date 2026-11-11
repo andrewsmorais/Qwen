@@ -139,6 +139,9 @@ vi.mock("@/lib/supabase", () => ({
           return q;
         },
         limit: () => q,
+        // histórico do documento (teste grátis): nenhuma outra empresa contratou
+        neq: () => q,
+        not: () => q,
         maybeSingle: async () => execute(),
         insert: (data: Record<string, unknown>) => {
           operation = "insert";

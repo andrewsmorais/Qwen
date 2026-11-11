@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { exigirHumano, limitarPorOrigem } from "@/lib/protecao-do-checkout";
 import { tokenizeCreditCard, findOrCreateCustomer } from "@/lib/asaas/client";
 import { origemDoCartao } from "@/lib/asaas/origem-cartao";
 
@@ -13,7 +14,11 @@ const emailValido = (value: string) =>
 
 export async function POST(req: NextRequest) {
   try {
+    const limitado = limitarPorOrigem(req, "tokenize-card");
+    if (limitado) return limitado;
     const body = objeto(await req.json().catch(() => null));
+    const semProva = await exigirHumano(req, body.turnstile_token);
+    if (semProva) return semProva;
     const customer = objeto(body.customer);
     const holder = objeto(body.holder_info);
     let customerId = texto(body.customer_id);
