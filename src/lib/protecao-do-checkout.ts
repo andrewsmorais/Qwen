@@ -29,8 +29,14 @@ const BALDE_GLOBAL = { limite: 120, janelaMs: 10 * 60 * 1000 };
 const batidas = new Map<string, number[]>();
 
 /** `true` = pode seguir. Guarda a batida. Exportada para teste. */
-export function cabeNaJanela(chave: string, j: Janela, agora = Date.now()): boolean {
-  const recentes = (batidas.get(chave) ?? []).filter((t) => agora - t < j.janelaMs);
+export function cabeNaJanela(
+  chave: string,
+  j: Janela,
+  agora = Date.now(),
+): boolean {
+  const recentes = (batidas.get(chave) ?? []).filter(
+    (t) => agora - t < j.janelaMs,
+  );
   if (recentes.length >= j.limite) {
     batidas.set(chave, recentes);
     return false;
@@ -59,7 +65,10 @@ export function limitarPorOrigem(
     : cabeNaJanela(`${rota}:global`, BALDE_GLOBAL);
   if (ok) return null;
   return NextResponse.json(
-    { error: "Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo." },
+    {
+      error:
+        "Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.",
+    },
     { status: 429, headers: { "Retry-After": "600" } },
   );
 }
@@ -74,7 +83,11 @@ export async function exigirHumano(
   const segredo = (ambiente.TURNSTILE_SECRET_KEY ?? "").trim();
   if (!segredo) return null;
   const recusa = NextResponse.json(
-    { error: "Não conseguimos confirmar que é você. Recarregue a página e tente de novo.", code: "captcha" },
+    {
+      error:
+        "Não conseguimos confirmar que é você. Recarregue a página e tente de novo.",
+      code: "captcha",
+    },
     { status: 400 },
   );
   if (typeof token !== "string" || !token || token.length > 4096) return recusa;
@@ -86,7 +99,9 @@ export async function exigirHumano(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       { method: "POST", body: corpo, signal: AbortSignal.timeout(5000) },
     );
-    const json = (await res.json().catch(() => null)) as { success?: unknown } | null;
+    const json = (await res.json().catch(() => null)) as {
+      success?: unknown;
+    } | null;
     return json?.success === true ? null : recusa;
   } catch {
     // Cloudflare fora do ar: recusa (a chave está ligada, então o dono quer a prova).

@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body))
       return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
-    const semProva = await exigirHumano(req, (body as Record<string, unknown>).turnstile_token);
+    const semProva = await exigirHumano(
+      req,
+      (body as Record<string, unknown>).turnstile_token,
+    );
     if (semProva) return semProva;
     for (const value of [
       body.plan_slug,

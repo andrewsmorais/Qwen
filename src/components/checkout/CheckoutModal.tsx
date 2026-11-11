@@ -58,7 +58,11 @@ export function CheckoutModal({
   const [isSuccess, setIsSuccess] = useState(false);
   /** O teste grátis é um por empresa: sem ele, a primeira cobrança vence hoje. */
   const [comTeste, setComTeste] = useState(true);
-  const { ligado: captchaLigado, definirCaixa, token: tokenHumano } = useTurnstile(isOpen);
+  const {
+    ligado: captchaLigado,
+    definirCaixa,
+    token: tokenHumano,
+  } = useTurnstile(isOpen);
 
   // User Info Form (Preenchido na tela principal)
   const [customerForm, setCustomerForm] = useState({
@@ -382,7 +386,9 @@ export function CheckoutModal({
               <Check className="w-10 h-10" />
             </div>
             <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              {comTeste ? "Teste grátis de 7 dias ativado!" : "Plano registrado!"}
+              {comTeste
+                ? "Teste grátis de 7 dias ativado!"
+                : "Plano registrado!"}
             </h2>
             <p className="text-slate-600 mb-8 text-lg">
               {comTeste
@@ -414,13 +420,15 @@ export function CheckoutModal({
               </div>
             )}
             <p className="mb-6 text-xs text-slate-500">
-              O teste grátis é um por empresa (CPF/CNPJ). Quem já contratou paga a
-              primeira cobrança no ato.
+              O teste grátis é um por empresa (CPF/CNPJ). Quem já contratou paga
+              a primeira cobrança no ato.
             </p>
 
             {/* FORMULÁRIO COMPLETO */}
             <form onSubmit={handleCheckout}>
-              {captchaLigado ? <div ref={definirCaixa} className="mb-6" /> : null}
+              {captchaLigado ? (
+                <div ref={definirCaixa} className="mb-6" />
+              ) : null}
               <div className="mb-8">
                 <p
                   id="checkout-plan-summary"
@@ -652,17 +660,18 @@ export function CheckoutModal({
                     <strong>Aviso importante:</strong> Seu cartão{" "}
                     <strong>NÃO</strong> será cobrado hoje. A cobrança de{" "}
                     {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]} ocorrerá apenas após o fim do seu período de
-                    teste grátis (7 dias), se este CPF/CNPJ ainda não usou o
-                    teste. Você pode cancelar a qualquer momento antes disso.
+                    {nomeDoCiclo[billingCycle]} ocorrerá apenas após o fim do
+                    seu período de teste grátis (7 dias), se este CPF/CNPJ ainda
+                    não usou o teste. Você pode cancelar a qualquer momento
+                    antes disso.
                   </div>
                 )}
                 {(method === "PIX" || method === "BOLETO") && selecao && (
                   <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
                     <strong>Aviso importante:</strong> Será gerada uma fatura de{" "}
                     {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias de teste grátis
-                    (ou hoje, se este CPF/CNPJ já usou o teste).
+                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias
+                    de teste grátis (ou hoje, se este CPF/CNPJ já usou o teste).
                     Seu{" "}
                     <strong>
                       acesso de teste será liberado após a confirmação do
@@ -793,7 +802,8 @@ function useTurnstile(aberto: boolean) {
     if ((window as unknown as { turnstile?: Turnstile }).turnstile) montar();
     else {
       const script = document.createElement("script");
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.onload = montar;
       document.head.appendChild(script);

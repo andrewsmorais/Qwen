@@ -23,7 +23,12 @@ export function temDireitoAoTeste(h: HistoricoDoDocumento): boolean {
 export const DIAS_DE_TESTE = 7;
 
 /** A data (aaaa-mm-dd) da primeira cobrança no Asaas. */
-export function primeiraCobranca(comTeste: boolean, agora = new Date()): string {
+export function primeiraCobranca(
+  comTeste: boolean,
+  agora = new Date(),
+): string {
   const dias = comTeste ? DIAS_DE_TESTE : 0;
-  return new Date(agora.getTime() + dias * 24 * 60 * 60 * 1000).toISOString().split("T")[0]!;
+  return new Date(agora.getTime() + dias * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0]!;
 }
