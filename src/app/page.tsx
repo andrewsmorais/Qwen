@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", languages: { "pt-BR": "/", "x-default": "/" } },
 };
 
 export default function Home() {
@@ -410,9 +410,9 @@ export default function Home() {
                   
                   <div className="flex flex-col items-center mb-10 relative z-10">
                      <div className="flex mb-5">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80" alt="Equipe 1" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md z-30" />
-                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" alt="Equipe 2" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md -ml-4 z-20" />
-                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80" alt="Equipe 3" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md -ml-4 z-10" />
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80" alt="Ilustração: atendente da equipe do seu negócio" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md z-30" />
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" alt="Ilustração: vendedor da equipe do seu negócio" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md -ml-4 z-20" />
+                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80" alt="Ilustração: gerente da equipe do seu negócio" className="w-14 h-14 rounded-full border-[3px] border-[#2d2a5e] object-cover shadow-md -ml-4 z-10" />
                      </div>
                      <div className="w-8 h-1 bg-slate-400/40 rounded-full mb-4"></div>
                      <h3 className="text-2xl font-bold text-indigo-100 tracking-tight">Sua Equipe e Operação</h3>
@@ -569,7 +569,7 @@ export default function Home() {
                <div>
                   <h3 className="font-semibold text-slate-900 mb-4">Empresa</h3>
                   <ul className="space-y-3 text-sm">
-                     <li><Link href="/sobre" className="hover:text-indigo-600 transition-colors">Sobre nós</Link></li>
+                     <li><Link href="/sobre-nos" className="hover:text-indigo-600 transition-colors">Sobre nós</Link></li>
                      <li><Link href="/contato" className="hover:text-indigo-600 transition-colors">Contato</Link></li>
                   </ul>
                </div>
@@ -593,7 +593,7 @@ export default function Home() {
                   </div>
                </div>
                <div className="text-center space-y-1">
-                  <p>ChatAI Online – Andrews Rocha De Morais | CNPJ: 423.495.698/0001-88</p>
+                  <p>ChatAI Online – Andrews Rocha De Morais | CPF: 423.495.698-88</p>
                   <p>Avenida Marginal, 761, CEP 11687-147 – Ubatuba/SP</p>
                   <p>
                      Informações e preços atualizados em{" "}

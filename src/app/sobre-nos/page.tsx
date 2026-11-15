@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { SEGMENTOS } from '@/lib/oferta';
 
 export const metadata = {
   title: 'Sobre o ChatAI Online',
-  alternates: { canonical: '/sobre' },
+  alternates: { canonical: '/sobre-nos' },
   description: 'Conheça mais sobre o ChatAI Online e nossa missão',
 };
 
@@ -38,22 +39,12 @@ export default function SobrePage() {
             Nossa plataforma não é uma ferramenta genérica. Configuramos a inteligência do sistema para responder exatamente às necessidades da sua rotina diária:
           </p>
           <ul className="list-disc pl-6 space-y-4 mt-4 text-gray-300">
-            <li>
-              <strong className="text-white font-semibold block mb-1">Barbearias, Salões de Beleza e Estética:</strong>
-              Atendimento instantâneo com envio de catálogo de serviços e valores. Agendamento automático com horários disponíveis da equipe sem conflito de agenda. Lembretes preventivos de horário para zerar faltas e desistências.
-            </li>
-            <li>
-              <strong className="text-white font-semibold block mb-1">Comércio, Lojas e Varejo Local:</strong>
-              Envio ágil de fotos de produtos, variações, tamanhos e valores. Resposta imediata para conferência de estoque, formas de pagamento e frete/entrega. Organização de pedidos com dados prontos para faturamento e envio.
-            </li>
-            <li>
-              <strong className="text-white font-semibold block mb-1">Clínicas, Consultórios e Especialistas:</strong>
-              Triagem inicial de pacientes e direcionamento por tipo de consulta ou procedimento. Informações precisas sobre preparo de exames, localização e convênios aceitos. Organização de listas de espera para encaixes rápidos.
-            </li>
-            <li>
-              <strong className="text-white font-semibold block mb-1">Prestadores de Serviços e Manutenção:</strong>
-              Coleta automática de fotos, vídeos e detalhes do serviço antes de passar o orçamento. Qualificação imediata do lead com agendamento de visita técnica no calendário. Histórico centralizado de negociações para acompanhamento de propostas pendentes.
-            </li>
+            {SEGMENTOS.map((s) => (
+              <li key={s.titulo}>
+                <strong className="text-white font-semibold block mb-1">{s.titulo}:</strong>
+                {s.texto}
+              </li>
+            ))}
           </ul>
 
           <h2 className="text-2xl font-semibold text-white mt-12 mb-6">Por Que Escolher o ChatAI Online?</h2>

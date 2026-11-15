@@ -87,7 +87,7 @@ describe("busca interna", () => {
   });
 
   it("acha a página pelo segmento do cliente", () => {
-    expect(buscar("barbearia").map((r) => r.url)).toContain("/sobre");
+    expect(buscar("barbearia").map((r) => r.url)).toContain("/sobre-nos");
   });
 
   it("busca vazia, só de palavras comuns ou gigante não quebra", () => {

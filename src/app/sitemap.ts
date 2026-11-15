@@ -7,6 +7,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE.url}${p.caminho === "/" ? "" : p.caminho}`,
     lastModified: SITE.ultimaAtualizacao,
     changeFrequency: p.caminho === "/" ? "weekly" : "monthly",
-    priority: p.caminho === "/" ? 1 : p.caminho === "/sobre" || p.caminho === "/contato" ? 0.6 : 0.3,
+    priority: p.caminho === "/" ? 1 : p.caminho === "/sobre-nos" || p.caminho === "/contato" ? 0.6 : 0.3,
   }));
 }

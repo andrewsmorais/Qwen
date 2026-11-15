@@ -10,8 +10,8 @@ import { CARDS, DEFINICAO, PERGUNTAS_FREQUENTES, SO_NO_CHATAI } from "@/lib/ofer
  * no ChatGPT/Perplexity.
  *
  * Por isso NÃO existem aqui: avaliação/nota de clientes (não há avaliações
- * reais publicadas), CNPJ (o número do rodapé
- * precisa ser conferido antes de virar dado estruturado) nem redes sociais
+ * reais publicadas), CPF do responsável (documento de pessoa física: fica só
+ * no rodapé, não vira dado para robô) nem redes sociais
  * (`sameAs`) — entram quando existirem de verdade.
  */
 export const SITE = {
@@ -45,7 +45,7 @@ export const SITE = {
   ultimaAtualizacao: "2026-11-15",
   paginas: [
     { caminho: "/", titulo: "Página inicial", descricao: "O que é o ChatAI Online, recursos, planos e perguntas frequentes." },
-    { caminho: "/sobre", titulo: "Sobre o ChatAI Online", descricao: "Missão e para quais negócios o ChatAI Online foi feito: barbearias, salões de beleza e estética, comércio e lojas, clínicas e consultórios, prestadores de serviços e manutenção." },
+    { caminho: "/sobre-nos", titulo: "Sobre o ChatAI Online", descricao: "Missão e para quais negócios o ChatAI Online foi feito: barbearias, salões de beleza e estética, comércio e lojas, clínicas e consultórios, prestadores de serviços e manutenção." },
     { caminho: "/contato", titulo: "Contato", descricao: "WhatsApp e e-mail da equipe." },
     { caminho: "/termos", titulo: "Termos de Uso", descricao: "Regras de uso da plataforma." },
     { caminho: "/privacidade", titulo: "Política de Privacidade", descricao: "Como os dados são tratados (LGPD)." },
@@ -163,7 +163,8 @@ export function jsonLdProduto() {
   const precos = CARDS.map((c) => PLANOS[c.slug].price_monthly);
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    // WebApplication (subtipo de SoftwareApplication): o CRM roda no navegador.
+    "@type": "WebApplication",
     "@id": ID_APP,
     name: SITE.nome,
     url: SITE.url,
@@ -199,6 +200,7 @@ export function jsonLdPaginaInicial() {
     inLanguage: SITE.idioma,
     isPartOf: { "@id": ID_SITE },
     about: { "@id": ID_APP },
+    author: { "@id": ID_ORG },
     dateModified: SITE.ultimaAtualizacao,
   };
 }

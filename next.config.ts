@@ -24,6 +24,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // "Sobre nós" mudou de /sobre para /sobre-nos (o endereço que buscadores e
+  // assistentes de IA reconhecem como a página da empresa). O antigo continua
+  // valendo e leva ao novo, para nenhum link já publicado quebrar.
+  async redirects() {
+    return [{ source: "/sobre", destination: "/sobre-nos", permanent: true }];
+  },
   async headers() {
     return [
       {

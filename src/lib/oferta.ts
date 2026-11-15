@@ -170,3 +170,27 @@ export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [
    a: "Com certeza. Nossos agentes de IA conseguem se comunicar e vender em mais de 50 idiomas nativamente."
 }
 ];
+
+/** Para quem o ChatAI Online foi feito — a página Sobre mostra, o `llms-full.txt` repete. */
+export const SEGMENTOS: { titulo: string; texto: string }[] = [
+  {
+    titulo: "Barbearias, Salões de Beleza e Estética",
+    texto:
+      "Atendimento instantâneo com envio de catálogo de serviços e valores. Agendamento automático com horários disponíveis da equipe sem conflito de agenda. Lembretes preventivos de horário para zerar faltas e desistências.",
+  },
+  {
+    titulo: "Comércio, Lojas e Varejo Local",
+    texto:
+      "Envio ágil de fotos de produtos, variações, tamanhos e valores. Resposta imediata para conferência de estoque, formas de pagamento e frete/entrega. Organização de pedidos com dados prontos para faturamento e envio.",
+  },
+  {
+    titulo: "Clínicas, Consultórios e Especialistas",
+    texto:
+      "Triagem inicial de pacientes e direcionamento por tipo de consulta ou procedimento. Informações precisas sobre preparo de exames, localização e convênios aceitos. Organização de listas de espera para encaixes rápidos.",
+  },
+  {
+    titulo: "Prestadores de Serviços e Manutenção",
+    texto:
+      "Coleta automática de fotos, vídeos e detalhes do serviço antes de passar o orçamento. Qualificação imediata do lead com agendamento de visita técnica no calendário. Histórico centralizado de negociações para acompanhamento de propostas pendentes.",
+  },
+];

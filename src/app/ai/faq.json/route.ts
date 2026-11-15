@@ -9,7 +9,7 @@ export function GET() {
     name: SITE.nome,
     url: `${SITE.url}/#ajuda`,
     language: SITE.idioma,
-    faq: PERGUNTAS_FREQUENTES.map((f) => ({ question: f.q, answer: f.a })),
+    faqs: PERGUNTAS_FREQUENTES.map((f) => ({ question: f.q, answer: f.a })),
     last_updated: SITE.ultimaAtualizacao,
   });
 }

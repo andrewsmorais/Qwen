@@ -1,5 +1,5 @@
 import { PLANOS } from "@/lib/planos";
-import { CARDS, PERGUNTAS_FREQUENTES, SO_NO_CHATAI } from "@/lib/oferta";
+import { CARDS, PERGUNTAS_FREQUENTES, SEGMENTOS, SO_NO_CHATAI } from "@/lib/oferta";
 import { SITE, precoLegivel } from "@/lib/seo/site";
 
 /**
@@ -11,7 +11,7 @@ import { SITE, precoLegivel } from "@/lib/seo/site";
  * o arquivo estático antigo ficou com preço, plano e recurso de outra época, e é
  * exatamente isso que uma IA citaria.
  */
-export function gerarLlmsTxt(): string {
+export function gerarLlmsTxt(completo = false): string {
   const l: string[] = [];
   l.push(`# ${SITE.nome}`, "", `> ${SITE.definicao}`, "");
   l.push(
@@ -21,7 +21,9 @@ export function gerarLlmsTxt(): string {
   l.push("## Páginas", "");
   for (const p of SITE.paginas) l.push(`- [${p.titulo}](${SITE.url}${p.caminho === "/" ? "" : p.caminho}): ${p.descricao}`);
   l.push(`- [Entrar no CRM](${SITE.crm}): acesso de quem já é cliente.`);
-  l.push(`- Busca no site: ${SITE.url}/busca?q={termo} (planos, recursos e perguntas frequentes).`, "");
+  l.push(`- Busca no site: ${SITE.url}/busca?q={termo} (planos, recursos e perguntas frequentes).`);
+  if (!completo) l.push(`- [Versão completa deste resumo](${SITE.url}/llms-full.txt): inclui para quais negócios o ChatAI Online foi feito.`);
+  l.push("");
 
   l.push("## Planos e preços (BRL)", "");
   for (const card of CARDS) {
@@ -40,6 +42,11 @@ export function gerarLlmsTxt(): string {
   l.push("## Diferenciais", "");
   for (const d of SO_NO_CHATAI) l.push(`- **${d.titulo}**: ${d.texto}`);
   l.push("");
+
+  if (completo) {
+    l.push("## Para quais negócios", "");
+    for (const seg of SEGMENTOS) l.push(`### ${seg.titulo}`, "", seg.texto, "");
+  }
 
   l.push("## Perguntas frequentes", "");
   for (const f of PERGUNTAS_FREQUENTES) l.push(`### ${f.q}`, "", f.a, "");
