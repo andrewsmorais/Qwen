@@ -10,7 +10,7 @@ import { CARDS, DEFINICAO, PERGUNTAS_FREQUENTES, SO_NO_CHATAI } from "@/lib/ofer
  * no ChatGPT/Perplexity.
  *
  * Por isso NÃO existem aqui: avaliação/nota de clientes (não há avaliações
- * reais publicadas), busca interna (o site não tem), CNPJ (o número do rodapé
+ * reais publicadas), CNPJ (o número do rodapé
  * precisa ser conferido antes de virar dado estruturado) nem redes sociais
  * (`sameAs`) — entram quando existirem de verdade.
  */
@@ -45,7 +45,7 @@ export const SITE = {
   ultimaAtualizacao: "2026-11-15",
   paginas: [
     { caminho: "/", titulo: "Página inicial", descricao: "O que é o ChatAI Online, recursos, planos e perguntas frequentes." },
-    { caminho: "/sobre", titulo: "Sobre o ChatAI Online", descricao: "Missão e para quais negócios o ChatAI Online foi feito." },
+    { caminho: "/sobre", titulo: "Sobre o ChatAI Online", descricao: "Missão e para quais negócios o ChatAI Online foi feito: barbearias, salões de beleza e estética, comércio e lojas, clínicas e consultórios, prestadores de serviços e manutenção." },
     { caminho: "/contato", titulo: "Contato", descricao: "WhatsApp e e-mail da equipe." },
     { caminho: "/termos", titulo: "Termos de Uso", descricao: "Regras de uso da plataforma." },
     { caminho: "/privacidade", titulo: "Política de Privacidade", descricao: "Como os dados são tratados (LGPD)." },
@@ -108,7 +108,10 @@ export function jsonLdOrganizacao() {
   };
 }
 
-/** O site. Sem `SearchAction`: o site não tem busca, e declarar uma seria falso. */
+/**
+ * O site, com a busca interna (`/busca?q=`, `lib/seo/busca.ts`). O
+ * `SearchAction` só existe porque a página de busca existe de verdade.
+ */
 export function jsonLdSite() {
   return {
     "@context": "https://schema.org",
@@ -118,6 +121,11 @@ export function jsonLdSite() {
     url: SITE.url,
     inLanguage: SITE.idioma,
     publisher: { "@id": ID_ORG },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${SITE.url}/busca?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 

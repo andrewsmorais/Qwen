@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { PLANOS } from "@/lib/planos";
@@ -11,6 +13,7 @@ import {
   jsonLdSeguro,
   jsonLdSite,
 } from "@/lib/seo/site";
+import { buscar } from "@/lib/seo/busca";
 
 /**
  * O que os robôs de busca e de IA leem tem de dizer o MESMO que a página e o
@@ -39,8 +42,11 @@ describe("SEO/GEO — o que os robôs leem bate com a página", () => {
     expect(tudo).not.toMatch(/aggregateRating|ratingValue|reviewCount/i);
   });
 
-  it("não declara busca interna que o site não tem", () => {
-    expect(JSON.stringify(jsonLdSite())).not.toMatch(/SearchAction/);
+  it("o SearchAction aponta para a busca que existe de verdade", () => {
+    const acao = jsonLdSite().potentialAction;
+    expect(acao["@type"]).toBe("SearchAction");
+    expect(acao.target.urlTemplate).toBe(`${SITE.url}/busca?q={search_term_string}`);
+    expect(existsSync(path.resolve(__dirname, "../src/app/busca/page.tsx"))).toBe(true);
   });
 
   it("o FAQPage é exatamente a lista de perguntas da página, e começa pela definição", () => {
@@ -65,5 +71,32 @@ describe("SEO/GEO — o que os robôs leem bate com a página", () => {
 
   it("o JSON-LD não fecha a tag <script> antes da hora", () => {
     expect(jsonLdSeguro({ texto: "</script><script>alert(1)</script>" })).not.toContain("</script>");
+  });
+});
+
+describe("busca interna", () => {
+  it("acha sem acento e sem maiúscula", () => {
+    const r = buscar("PRECO");
+    expect(r[0]?.titulo).toBe("Quanto custa o ChatAI Online?");
+  });
+
+  it("acha o recurso dentro do plano e o diferencial", () => {
+    const titulos = buscar("agendamento").map((r) => r.titulo);
+    expect(titulos).toContain("Agendamento automático");
+    expect(titulos.some((t) => t.startsWith("Essencial"))).toBe(true);
+  });
+
+  it("acha a página pelo segmento do cliente", () => {
+    expect(buscar("barbearia").map((r) => r.url)).toContain("/sobre");
+  });
+
+  it("busca vazia, só de palavras comuns ou gigante não quebra", () => {
+    expect(buscar("")).toEqual([]);
+    expect(buscar("de para com")).toEqual([]);
+    expect(() => buscar("x".repeat(10_000))).not.toThrow();
+  });
+
+  it("todo resultado leva a um endereço do próprio site", () => {
+    for (const r of buscar("whatsapp ia plano funil")) expect(r.url.startsWith("/")).toBe(true);
   });
 });

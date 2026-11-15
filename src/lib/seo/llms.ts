@@ -20,7 +20,8 @@ export function gerarLlmsTxt(): string {
   );
   l.push("## Páginas", "");
   for (const p of SITE.paginas) l.push(`- [${p.titulo}](${SITE.url}${p.caminho === "/" ? "" : p.caminho}): ${p.descricao}`);
-  l.push(`- [Entrar no CRM](${SITE.crm}): acesso de quem já é cliente.`, "");
+  l.push(`- [Entrar no CRM](${SITE.crm}): acesso de quem já é cliente.`);
+  l.push(`- Busca no site: ${SITE.url}/busca?q={termo} (planos, recursos e perguntas frequentes).`, "");
 
   l.push("## Planos e preços (BRL)", "");
   for (const card of CARDS) {

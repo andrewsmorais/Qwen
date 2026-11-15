@@ -506,6 +506,23 @@ export default function Home() {
                     </details>
                  ))}
               </div>
+
+              <form action="/busca" method="get" role="search" className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                 <label htmlFor="faq-busca" className="text-sm font-medium text-slate-600 sm:whitespace-nowrap">
+                    Não achou sua dúvida?
+                 </label>
+                 <input
+                    id="faq-busca"
+                    name="q"
+                    type="search"
+                    maxLength={120}
+                    placeholder="Pesquise: agendamento, preço, chatbot…"
+                    className="flex-1 rounded-full border border-slate-300 px-5 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 />
+                 <button type="submit" className="rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700 transition-colors">
+                    Buscar
+                 </button>
+              </form>
            </div>
         </section>
 
