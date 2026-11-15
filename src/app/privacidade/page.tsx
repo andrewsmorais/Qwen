@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: 'Política de Privacidade | ChatAI Online',
+  title: 'Política de Privacidade',
+  alternates: { canonical: '/privacidade' },
   description: 'Política de Privacidade do ChatAI Online',
 };
 

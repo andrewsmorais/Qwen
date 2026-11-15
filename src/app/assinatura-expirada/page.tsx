@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { AlertCircle, CreditCard } from "lucide-react";
+import type { Metadata } from "next";
+
+/** Página de aviso para quem já é cliente: não é conteúdo para busca nem para IA. */
+export const metadata: Metadata = {
+  title: "Assinatura expirada",
+  robots: { index: false, follow: false },
+};
 
 export default function AssinaturaExpiradaPage() {
   return (

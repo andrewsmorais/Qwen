@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: 'Termos de Uso | ChatAI Online',
+  title: 'Termos de Uso',
+  alternates: { canonical: '/termos' },
   description: 'Termos de Uso e Condições de Serviço do ChatAI Online',
 };
 

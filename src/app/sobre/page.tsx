@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: 'Sobre o ChatAI Online | ChatAI Online',
+  title: 'Sobre o ChatAI Online',
+  alternates: { canonical: '/sobre' },
   description: 'Conheça mais sobre o ChatAI Online e nossa missão',
 };
 

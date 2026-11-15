@@ -2,6 +2,9 @@
 import { Pricing } from "@/components/Pricing";
 import { Header } from "@/components/Header";
 import { CRM_URL } from "@/lib/urls";
+import { PERGUNTAS_FREQUENTES } from "@/lib/oferta";
+import { SITE, jsonLdPaginaInicial, jsonLdPerguntas, jsonLdProduto, jsonLdSeguro } from "@/lib/seo/site";
+import type { Metadata } from "next";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -24,103 +27,11 @@ import {
   Building2
 } from "lucide-react";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 export default function Home() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "ChatAI Online",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web",
-    "description": "CRM com IA para WhatsApp que atende clientes 24/7, qualifica leads e fecha vendas automaticamente",
-    "offers": {
-      "@type": "AggregateOffer",
-      "priceCurrency": "BRL",
-      "lowPrice": "89.90",
-      "highPrice": "219.90",
-      "offerCount": "3",
-      "offers": [
-        {
-          "@type": "Offer",
-          "name": "Essencial",
-          "price": "89.90",
-          "priceCurrency": "BRL"
-        },
-        {
-          "@type": "Offer",
-          "name": "Impulso",
-          "price": "149.90",
-          "priceCurrency": "BRL"
-        },
-        {
-          "@type": "Offer",
-          "name": "Escala",
-          "price": "219.90",
-          "priceCurrency": "BRL"
-        }
-      ]
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "127"
-    }
-  };
-
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "A IA substitui minha equipe de vendas?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Embora seja possível, recomendamos usar a IA para otimizar o atendimento, sem substituir o toque humano. O equilíbrio entre a inteligência artificial e sua equipe geralmente traz os melhores resultados."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "É complicado treinar a Inteligência Artificial?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Treine sua IA em minutos. O processo é feito de forma simples e natural, como se você estivesse ensinando um colega de trabalho, sem precisar de configurações manuais complexas."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Vocês ajudam na configuração da plataforma?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sim! Oferecemos suporte para ajudar na implementação, desde o treinamento da IA até a estruturação dos seus fluxos de atendimento e integração com suas ferramentas atuais."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Preciso ter conhecimento técnico ou saber programar?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Definitivamente não. Nossa plataforma é totalmente visual e intuitiva. Além disso, nossa equipe está sempre disponível para te ajudar em qualquer etapa da configuração."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "A IA funciona para processos de vendas mais complexos?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sim, a IA aprende com seus materiais (site, PDFs, FAQs) e se adapta ao seu negócio. Para vendas muito complexas, ela pode atuar qualificando o lead e agendando para um humano finalizar."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "O Agente consegue atender em outros idiomas?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Com certeza. Nossos agentes de IA conseguem se comunicar e vender em mais de 50 idiomas nativamente."
-        }
-      }
-    ]
-  };
-
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-500/30">
       {/* HEADER */}
@@ -579,32 +490,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 tracking-tight">Dúvidas frequentes</h2>
               
               <div className="space-y-0 border border-slate-200 rounded-2xl overflow-hidden">
-                 {[
-                    {
-                       q: "A IA substitui minha equipe de vendas?",
-                       a: "Embora seja possível, recomendamos usar a IA para otimizar o atendimento, sem substituir o toque humano. O equilíbrio entre a inteligência artificial e sua equipe geralmente traz os melhores resultados."
-                    },
-                    {
-                       q: "É complicado treinar a Inteligência Artificial?",
-                       a: "Treine sua IA em minutos. O processo é feito de forma simples e natural, como se você estivesse ensinando um colega de trabalho, sem precisar de configurações manuais complexas."
-                    },
-                    {
-                       q: "Vocês ajudam na configuração da plataforma?",
-                       a: "Sim! Oferecemos suporte para ajudar na implementação, desde o treinamento da IA até a estruturação dos seus fluxos de atendimento e integração com suas ferramentas atuais."
-                    },
-                    {
-                       q: "Preciso ter conhecimento técnico ou saber programar?",
-                       a: "Definitivamente não. Nossa plataforma é totalmente visual e intuitiva. Além disso, nossa equipe está sempre disponível para te ajudar em qualquer etapa da configuração."
-                    },
-                    {
-                       q: "A IA funciona para processos de vendas mais complexos?",
-                       a: "Sim, a IA aprende com seus materiais (site, PDFs, FAQs) e se adapta ao seu negócio. Para vendas muito complexas, ela pode atuar qualificando o lead e agendando para um humano finalizar."
-                    },
-                    {
-                       q: "O Agente consegue atender em outros idiomas?",
-                       a: "Com certeza. Nossos agentes de IA conseguem se comunicar e vender em mais de 50 idiomas nativamente."
-                    }
-                 ].map((item, i) => (
+                 {PERGUNTAS_FREQUENTES.map((item, i) => (
                     <details key={i} name="faq-accordion" className="group border-b border-slate-200 last:border-0">
                        <summary className="flex items-center justify-between px-6 py-5 font-semibold text-slate-800 cursor-pointer list-none text-base md:text-lg hover:bg-slate-50 transition-colors">
                           {item.q}
@@ -649,13 +535,13 @@ export default function Home() {
                         Chat<span className="text-indigo-600 font-black">AI</span> <span className="font-medium text-slate-500 text-lg">Online</span>
                      </span>
                   </div>
-                  <p className="text-sm text-slate-400 max-w-xs mb-6">
+                  <p className="text-sm text-slate-500 max-w-xs mb-6">
                      Plataforma completa de atendimento e vendas para o WhatsApp da sua empresa, potencializada por IA.
                   </p>
                </div>
                
                <div>
-                  <h4 className="font-semibold text-slate-900 mb-4">Produto</h4>
+                  <h3 className="font-semibold text-slate-900 mb-4">Produto</h3>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="#produto" className="hover:text-indigo-600 transition-colors">Funcionalidades</Link></li>
                      <li><Link href="#integracoes" className="hover:text-indigo-600 transition-colors">Integrações</Link></li>
@@ -664,7 +550,7 @@ export default function Home() {
                </div>
 
                <div>
-                  <h4 className="font-semibold text-slate-900 mb-4">Empresa</h4>
+                  <h3 className="font-semibold text-slate-900 mb-4">Empresa</h3>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="/sobre" className="hover:text-indigo-600 transition-colors">Sobre nós</Link></li>
                      <li><Link href="/contato" className="hover:text-indigo-600 transition-colors">Contato</Link></li>
@@ -672,7 +558,7 @@ export default function Home() {
                </div>
 
                <div>
-                  <h4 className="font-semibold text-slate-900 mb-4">Legal</h4>
+                  <h3 className="font-semibold text-slate-900 mb-4">Legal</h3>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="/termos" className="hover:text-indigo-600 transition-colors">Termos de Uso</Link></li>
                      <li><Link href="/privacidade" className="hover:text-indigo-600 transition-colors">Política de Privacidade</Link></li>
@@ -682,7 +568,7 @@ export default function Home() {
                </div>
             </div>
             
-            <div className="border-t border-slate-200 pt-8 flex flex-col items-center text-xs text-slate-400">
+            <div className="border-t border-slate-200 pt-8 flex flex-col items-center text-xs text-slate-500">
                <div className="flex flex-col md:flex-row items-center justify-between w-full mb-6">
                   <p>© 2026 Chat AI Online. Todos os direitos reservados.</p>
                   <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -692,6 +578,12 @@ export default function Home() {
                <div className="text-center space-y-1">
                   <p>ChatAI Online – Andrews Rocha De Morais | CNPJ: 423.495.698/0001-88</p>
                   <p>Avenida Marginal, 761, CEP 11687-147 – Ubatuba/SP</p>
+                  <p>
+                     Informações e preços atualizados em{" "}
+                     <time dateTime={SITE.ultimaAtualizacao}>
+                        {new Date(`${SITE.ultimaAtualizacao}T12:00:00Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                     </time>
+                  </p>
                </div>
             </div>
          </div>
@@ -715,14 +607,13 @@ export default function Home() {
          </span>
       </a>
       
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {[jsonLdProduto(), jsonLdPaginaInicial(), jsonLdPerguntas()].map((dado, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdSeguro(dado) }}
+        />
+      ))}
     </div>
   );
 }

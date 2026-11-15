@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: 'Política de Cookies | ChatAI Online',
+  title: 'Política de Cookies',
+  alternates: { canonical: '/cookies' },
   description: 'Política de Cookies do ChatAI Online',
 };
 

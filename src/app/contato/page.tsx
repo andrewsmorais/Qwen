@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ArrowLeft, MessageCircle, Mail, MapPin, Clock } from 'lucide-react';
 
 export const metadata = {
-  title: 'Contato | ChatAI Online',
+  title: 'Contato',
+  alternates: { canonical: '/contato' },
   description: 'Fale com a equipe da ChatAI Online',
 };
 

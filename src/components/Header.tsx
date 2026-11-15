@@ -39,6 +39,9 @@ export function Header() {
         <button 
           className="lg:hidden text-indigo-600 p-1.5 hover:bg-indigo-50 rounded-lg transition-colors ml-auto"
           onClick={() => setMenuOpen(!menuOpen)}
+          type="button"
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={menuOpen}
         >
           {menuOpen ? <X className="w-8 h-8" strokeWidth={2.5} /> : <Menu className="w-8 h-8" strokeWidth={2.5} />}
         </button>

@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: 'Política de Reembolso | ChatAI Online',
+  title: 'Política de Reembolso',
+  alternates: { canonical: '/reembolso' },
   description: 'Política de Cancelamento e Reembolso do ChatAI Online',
 };
 

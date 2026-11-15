@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE, jsonLdOrganizacao, jsonLdSeguro, jsonLdSite } from "@/lib/seo/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,7 @@ export const metadata: Metadata = {
     default: "ChatAI Online | CRM com IA para WhatsApp que vende por você",
     template: "%s | ChatAI Online",
   },
-  description:
-    "Atenda centenas de clientes no WhatsApp com IA treinada no DNA do seu negócio. Qualifique leads, envie Pix e feche vendas 24h por dia. Teste grátis por 7 dias.",
+  description: SITE.descricao,
   keywords: [
     "CRM WhatsApp",
     "agente de IA para vendas",
@@ -64,7 +64,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+        {[jsonLdOrganizacao(), jsonLdSite()].map((dado, i) => (
+          <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(dado) }} />
+        ))}
+      </body>
     </html>
   );
 }

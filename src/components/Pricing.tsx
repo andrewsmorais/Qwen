@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckoutModal } from "./checkout/CheckoutModal";
 import { PLANOS, selecionarPlano, type Plano, type Ciclo } from "@/lib/planos";
+import { CARDS, SO_NO_CHATAI } from "@/lib/oferta";
 
 /**
  * Cards de planos — a MESMA promessa que o CRM libera
@@ -27,112 +28,6 @@ const moeda = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
-
-type CardDoPlano = {
-  slug: Plano;
-  tag: string;
-  descricao: string;
-  destaque?: boolean;
-  rotuloDaLista: string;
-  /** Os números do plano — o que o CRM conta. Vão em negrito. */
-  principais: string[];
-  recursos: string[];
-};
-
-const CARDS: CardDoPlano[] = [
-  {
-    slug: "essencial",
-    tag: "Organiza",
-    descricao: "Para organizar atendimento, CRM e IA em uma única operação.",
-    rotuloDaLista: "Recursos incluídos",
-    principais: [
-      "2 números de WhatsApp",
-      "1 agente de IA",
-      "1 chatbot",
-      "CRM com 2 funis",
-    ],
-    recursos: [
-      "Agendamento pela IA na conversa",
-      "Agendamento pelo chatbot",
-      "Agenda com Google Meet",
-      "Radar de conversas",
-      "Caixa de entrada compartilhada",
-      "Base de conhecimento para a IA",
-      "IA que entende áudio e foto",
-      "IA passa a conversa para o atendente",
-      "Relatórios essenciais",
-    ],
-  },
-  {
-    slug: "impulso",
-    tag: "Acelera",
-    descricao: "Para equipes que querem automatizar vendas e atendimento.",
-    destaque: true,
-    rotuloDaLista: "Tudo do Essencial, mais:",
-    principais: [
-      "4 números de WhatsApp",
-      "2 agentes de IA",
-      "2 chatbots",
-      "CRM com 4 funis",
-    ],
-    recursos: [
-      "Chatbot avançado",
-      "Follow-up automático",
-      "Agente que organiza o CRM sozinho",
-      "Comandas e propostas",
-      "Distribuição automática de leads",
-      "Skills e processos para agentes de IA",
-      "API e Webhooks",
-      "Relatórios completos",
-    ],
-  },
-  {
-    slug: "escala",
-    tag: "Automatiza e integra",
-    descricao:
-      "Para operações que precisam de implantação, controle e automação avançada.",
-    rotuloDaLista: "Tudo do Impulso, mais:",
-    principais: [
-      "Implantação feita pela nossa equipe",
-      "Agentes e chatbots configurados com você",
-      "Opção de API oficial do WhatsApp",
-      "Atendimento prioritário",
-    ],
-    recursos: [
-      "A partir de 6 números de WhatsApp",
-      "A partir de 3 agentes de IA e 3 chatbots",
-      "A partir de 6 funis",
-      "Distribuição por número e por time",
-      "Permissões avançadas",
-      "Logs e auditoria",
-      "Marca própria",
-    ],
-  },
-];
-
-const SO_NO_CHATAI: { titulo: string; texto: string }[] = [
-  {
-    titulo: "Agendamento automático",
-    texto: "a IA marca o horário sem o cliente sair do WhatsApp",
-  },
-  { titulo: "Memória do agente", texto: "lembra do cliente da última conversa" },
-  {
-    titulo: "Radar de conversas",
-    texto: "mostra quem está esperando e quem esfriou",
-  },
-  {
-    titulo: "Importação de planilha",
-    texto: "sobe sua lista de contatos de uma vez",
-  },
-  {
-    titulo: "Catálogo de produtos",
-    texto: "a IA responde preço e disponibilidade",
-  },
-  {
-    titulo: "Agente que organiza o CRM",
-    texto: "move no funil, etiqueta e cria tarefa (Impulso+)",
-  },
-];
 
 const UUID_RX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

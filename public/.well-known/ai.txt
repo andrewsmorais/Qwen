@@ -1,0 +1,10 @@
+# ai.txt — permissões para assistentes de IA (ChatAI Online)
+# O conteúdo público de https://chataionline.io pode ser lido, resumido e citado
+# por assistentes de IA, com link para a página de origem.
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /assinatura-expirada
+
+# Resumo para IA: https://chataionline.io/llms.txt
+# Contato: suporte@chataionline.io
