@@ -218,6 +218,16 @@ export async function deleteSubscription(id: string) {
   return handleResponse<{ deleted: boolean; id: string }>(res);
 }
 
+/** Apaga uma cobrança avulsa ainda aberta (a diferença de uma troca que venceu). */
+export async function deletePayment(id: string) {
+  if (!/^pay_[A-Za-z0-9_]+$/.test(id)) throw new Error("Cobrança inválida.");
+  const res = await fetch(`${ASAAS_BASE_URL}/v3/payments/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  return handleResponse<{ deleted: boolean; id: string }>(res);
+}
+
 /**
  * Muda o valor da recorrência (troca de plano, CRM 0508). `updatePendingPayments`
  * leva o valor novo também à cobrança do próximo período que o Asaas já gerou.

@@ -501,6 +501,13 @@ export async function POST(req: NextRequest) {
           // (que, sem isto, voltariam pelo preço da tabela).
           ...LIMPA_TROCA,
           limites_personalizados: null,
+          // Extras cobrados à parte e o preço da proposta antiga também não
+          // voltam sozinhos: contratar de novo é contratar do zero.
+          extras: [],
+          troca_aplicada_pagamento_id: null,
+          contracted_amount_cents: null,
+          price_source: null,
+          contracted_at: null,
         })
         .eq("id", recontratar.id)
         .eq("organization_id", targetOrgId!);
@@ -651,6 +658,11 @@ export async function POST(req: NextRequest) {
       current_period_start: now.toISOString(),
       current_period_end: expiresAt,
       expires_at: expiresAt,
+      // O preço contratado (o e-mail de "plano contratado" e o MRR leem daqui).
+      contracted_amount_cents: selecao.cycleCents,
+      contracted_currency: "BRL",
+      contracted_at: now.toISOString(),
+      price_source: "catalogo",
       updated_at: now.toISOString(),
     };
 

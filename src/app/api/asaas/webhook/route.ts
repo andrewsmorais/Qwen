@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase";
 import { fimDoCiclo } from "@/lib/ciclo-assinatura";
-import { updateSubscriptionValue } from "@/lib/asaas/client";
+import { deletePayment, updateSubscriptionValue } from "@/lib/asaas/client";
 import {
   LIMPA_TROCA,
   downgradeVenceu,
@@ -229,7 +229,7 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
   const { data: sub, error } = await supabase
     .from("subscriptions")
     .select(
-      "id, organization_id, asaas_subscription_id, billing_cycle, troca_tipo, troca_plano",
+      "id, organization_id, asaas_subscription_id, billing_cycle, status, current_period_start, troca_tipo, troca_plano, troca_pedida_em",
     )
     .eq("troca_pagamento_id", pagamentoId)
     .maybeSingle();
@@ -238,23 +238,31 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
       { error: "Subscription lookup failed" },
       { status: 503 },
     );
-  // Já aplicada (reentrega) ou desistida: nada a fazer.
-  if (!sub) return NextResponse.json({ received: true, matched: false });
-
-  if (
-    evento === "PAYMENT_OVERDUE" ||
-    evento === "PAYMENT_DELETED" ||
-    evento === "PAYMENT_REFUNDED" ||
-    evento === "PAYMENT_CHARGEBACK_REQUESTED"
-  ) {
-    // A diferença não entrou: o pedido some e o cliente segue no plano de antes.
-    const { error: limpar } = await supabase
+  const estornou =
+    evento === "PAYMENT_REFUNDED" || evento === "PAYMENT_CHARGEBACK_REQUESTED";
+  if (!sub) {
+    // A diferença JÁ aplicada foi estornada ou contestada: o plano maior não
+    // pode ficar de graça. A conta é suspensa, como no estorno de uma fatura
+    // comum, até o dono resolver.
+    if (estornou) return await suspenderPorEstornoDaDiferenca(pagamentoId);
+    // Já aplicada (reentrega) ou desistida: nada a fazer.
+    return NextResponse.json({ received: true, matched: false });
+  }
+  const limpar = async () =>
+    supabase
       .from("subscriptions")
       .update({ ...LIMPA_TROCA, updated_at: new Date().toISOString() })
       .eq("organization_id", sub.organization_id)
       .eq("id", sub.id)
       .eq("troca_pagamento_id", pagamentoId);
-    if (limpar)
+
+  if (evento === "PAYMENT_OVERDUE" || evento === "PAYMENT_DELETED" || estornou) {
+    // A diferença não entrou: o pedido some e o cliente segue no plano de antes.
+    // Vencida, a cobrança é apagada no Asaas para não poder ser paga depois
+    // (pagamento atrasado não teria mais troca para aplicar).
+    if (evento === "PAYMENT_OVERDUE") await deletePayment(pagamentoId).catch(() => undefined);
+    const { error: erroDeLimpar } = await limpar();
+    if (erroDeLimpar)
       return NextResponse.json(
         { error: "Subscription update failed" },
         { status: 503 },
@@ -266,9 +274,30 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
   if (sub.troca_tipo !== "upgrade" || !ehPlanoTrocavel(sub.troca_plano))
     return NextResponse.json({ received: true, matched: false });
 
+  // Pago, mas não há mais o que subir: assinatura cancelada, sem recorrência,
+  // ou o período RENOVOU depois do pedido (a diferença era sobre o período
+  // velho e compraria o novo inteiro pelo preço do menor). Nunca 503 aqui:
+  // repetir não resolve, e reenvio infinito pausa a fila de webhooks de todos.
+  // O pedido é limpo e o caso fica no log para o dono devolver o valor.
+  const periodoRenovou =
+    typeof sub.troca_pedida_em === "string" &&
+    typeof sub.current_period_start === "string" &&
+    Date.parse(sub.current_period_start) > Date.parse(sub.troca_pedida_em);
+  if (
+    sub.status === "canceled" ||
+    typeof sub.asaas_subscription_id !== "string" ||
+    periodoRenovou
+  ) {
+    await limpar();
+    console.warn(
+      `[asaas-webhook] diferença de troca paga sem efeito (org ${sub.organization_id}, pagamento ${pagamentoId}): devolver o valor`,
+    );
+    return NextResponse.json({ received: true, applied: false });
+  }
+
   const plano = await planoDoCatalogo(supabase, sub.troca_plano);
   const valor = plano ? valorDoCiclo(plano, sub.billing_cycle) : null;
-  if (!plano || !valor || typeof sub.asaas_subscription_id !== "string")
+  if (!plano || !valor)
     return NextResponse.json({ error: "Plan lookup failed" }, { status: 503 });
   // Primeiro a recorrência (idempotente: a reentrega repete o mesmo valor),
   // depois a assinatura. Se o banco falhar, o Asaas reentrega e tudo se repete.
@@ -291,6 +320,8 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
       price_source: "catalogo",
       // Números combinados de um Escala por proposta não sobrevivem à troca.
       limites_personalizados: null,
+      // Guardada para o estorno ou a contestação dela suspenderem a conta.
+      troca_aplicada_pagamento_id: pagamentoId,
       updated_at: new Date().toISOString(),
     })
     .eq("organization_id", sub.organization_id)
@@ -301,5 +332,28 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
       { error: "Subscription update failed" },
       { status: 503 },
     );
+  return NextResponse.json({ received: true });
+}
+
+/** Estorno ou contestação de uma diferença JÁ aplicada: suspende a assinatura. */
+async function suspenderPorEstornoDaDiferenca(pagamentoId: string) {
+  const supabase = createSupabaseAdmin();
+  const { data: aplicada, error } = await supabase
+    .from("subscriptions")
+    .select("id, organization_id, status")
+    .eq("troca_aplicada_pagamento_id", pagamentoId)
+    .maybeSingle();
+  if (error)
+    return NextResponse.json({ error: "Subscription lookup failed" }, { status: 503 });
+  if (!aplicada || aplicada.status === "suspended")
+    return NextResponse.json({ received: true, matched: Boolean(aplicada) });
+  const { error: gravar } = await supabase
+    .from("subscriptions")
+    .update({ status: "suspended", updated_at: new Date().toISOString() })
+    .eq("organization_id", aplicada.organization_id)
+    .eq("id", aplicada.id)
+    .eq("troca_aplicada_pagamento_id", pagamentoId);
+  if (gravar)
+    return NextResponse.json({ error: "Subscription update failed" }, { status: 503 });
   return NextResponse.json({ received: true });
 }

@@ -88,6 +88,7 @@ export function downgradeVenceu(
     troca_efetiva_em?: unknown;
   },
   dueDate: string,
+  agora: Date = new Date(),
 ): sub is {
   troca_tipo: "downgrade";
   troca_plano: string;
@@ -97,6 +98,9 @@ export function downgradeVenceu(
     sub.troca_tipo === "downgrade" &&
     ehPlanoTrocavel(sub.troca_plano) &&
     typeof sub.troca_efetiva_em === "string" &&
-    dueDate >= sub.troca_efetiva_em.slice(0, 10)
+    dueDate >= sub.troca_efetiva_em.slice(0, 10) &&
+    // Renovação paga ADIANTADA não antecipa a descida: os dias que faltam do
+    // período já pago continuam no plano maior. Na data, o cron do CRM aplica.
+    agora.getTime() >= Date.parse(sub.troca_efetiva_em)
   );
 }
