@@ -35,14 +35,16 @@ export const CARDS: CardDoPlano[] = [
       "CRM com 2 funis",
     ],
     recursos: [
-      "Agendamento pela IA na conversa",
-      "Agendamento pelo chatbot",
-      "Agenda com Google Meet",
-      "Radar de conversas",
-      "Caixa de entrada compartilhada",
+      "Agendamento pela IA e pelo chatbot",
+      "Agenda com Google Meet e aviso no seu WhatsApp",
+      "Chatbot completo com modelos prontos",
+      "Respostas rápidas com foto e áudio",
+      "Caixa de entrada compartilhada e chat da equipe",
+      "Radar de conversas e painel ao vivo",
       "Base de conhecimento para a IA",
       "IA que entende áudio e foto",
       "IA passa a conversa para o atendente",
+      "Chat no site e aplicativo no celular",
       "Relatórios essenciais",
     ],
   },
@@ -62,35 +64,47 @@ export const CARDS: CardDoPlano[] = [
       "Chatbot avançado",
       "Follow-up automático",
       "Agente que organiza o CRM sozinho",
+      "IA que responde em grupos",
+      "Automações com e-mail, foto e aviso à equipe",
       "Comandas e propostas",
       "Distribuição automática de leads",
       "Skills e processos para agentes de IA",
       "API e Webhooks",
-      "Relatórios completos",
+      "Relatórios completos e metas",
     ],
   },
   {
     slug: "escala",
     tag: "Automatiza e integra",
-    descricao:
-      "Para operações que precisam de implantação, controle e automação avançada.",
+    descricao: "Para operações com muitos contatos, equipe maior e controle avançado.",
     rotuloDaLista: "Tudo do Impulso, mais:",
     principais: [
-      "Implantação feita pela nossa equipe",
-      "Agentes e chatbots configurados com você",
-      "Opção de API oficial do WhatsApp",
-      "Atendimento prioritário",
+      "6 números de WhatsApp",
+      "3 agentes de IA",
+      "3 chatbots",
+      "CRM com 6 funis",
     ],
     recursos: [
-      "A partir de 6 números de WhatsApp",
-      "A partir de 3 agentes de IA e 3 chatbots",
-      "A partir de 6 funis",
       "Distribuição por número e por time",
-      "Permissões avançadas",
+      "Permissões avançadas e telefone oculto",
       "Logs e auditoria",
+      "IA ligada ao banco de dados do seu sistema",
       "Marca própria",
+      "Atendimento prioritário",
     ],
   },
+];
+
+/**
+ * O que NENHUM plano inclui: cada uso gasta dinheiro de fora (busca paga,
+ * minuto de telefone, voz sintetizada). É contratado à parte, com o suporte, e
+ * o CRM só libera na conta em que o dono da plataforma ligou o extra.
+ */
+export const EXTRAS_A_PARTE: string[] = [
+  "Prospecção automática de empresas",
+  "Ligações por IA",
+  "Respostas da IA em áudio",
+  "API oficial do WhatsApp",
 ];
 
 export const SO_NO_CHATAI: { titulo: string; texto: string }[] = [
@@ -131,9 +145,9 @@ const brl = (centavos: number) =>
 /** "Quanto custa?", tirado da mesma tabela que o checkout cobra. */
 const RESPOSTA_DO_PRECO =
   `Há três planos: Essencial por ${brl(PLANOS.essencial.price_monthly)} por mês, ` +
-  `Impulso por ${brl(PLANOS.impulso.price_monthly)} por mês e Escala a partir de ` +
-  `${brl(PLANOS.escala.price_monthly)} por mês, com proposta sob medida. No trimestral há 10% ` +
-  "de desconto e no anual, 20%. O Essencial e o Impulso começam com 7 dias grátis.";
+  `Impulso por ${brl(PLANOS.impulso.price_monthly)} por mês e Escala por ` +
+  `${brl(PLANOS.escala.price_monthly)} por mês. No trimestral há 10% ` +
+  "de desconto e no anual, 20%. Os três começam com 7 dias grátis e se contratam direto na página.";
 
 /** As perguntas frequentes da página — a mesma lista vira o FAQPage do JSON-LD. */
 export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [

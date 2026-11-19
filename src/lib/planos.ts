@@ -4,12 +4,13 @@
  * Trimestral = 10% de desconto sobre 3 meses; anual = 20% sobre 12 meses.
  *
  * Desde 27/10/2026 o preço é por plano, não por atendente: cada plano já traz
- * os usuários da equipe (Essencial 2, Impulso 4, Escala a partir de 6) e o
+ * os usuários da equipe (Essencial 2, Impulso 4, Escala 6) e o
  * CRM conta a cota pelo próprio catálogo (`lib/billing/catalogo.ts` do CRM).
  * `seats` segue existindo no pedido e na assinatura, sempre 1.
  *
- * O Escala é sob consulta: o preço aparece como "a partir de", mas ele não se
- * contrata pelo checkout — o dono da plataforma ativa no CRM depois da proposta.
+ * Desde 19/11/2026 os TRÊS planos se contratam pelo checkout, com 7 dias
+ * grátis, e o CRM libera sozinho o que o card promete. `sob_consulta` continua
+ * existindo para um plano futuro que precise de proposta; hoje nenhum usa.
  */
 export const PLANOS = {
   essencial: {
@@ -34,7 +35,7 @@ export const PLANOS = {
     price_monthly: 34990,
     price_quarterly: 94473,
     price_yearly: 335904,
-    sob_consulta: true,
+    sob_consulta: false,
   },
 } as const;
 export type Plano = keyof typeof PLANOS;

@@ -6,6 +6,7 @@ import {
   LIMPA_TROCA,
   downgradeVenceu,
   ehCobrancaDeTroca,
+  ehPlanoTrocavel,
   planoDoCatalogo,
   valorDoCiclo,
 } from "@/lib/troca-de-plano";
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
           contracted_amount_cents: valor,
           contracted_at: new Date().toISOString(),
           price_source: "catalogo",
+          limites_personalizados: null,
         });
       }
       if (typeof event.payment.id === "string")
@@ -261,10 +263,7 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
   }
   if (evento !== "PAYMENT_CONFIRMED" && evento !== "PAYMENT_RECEIVED")
     return NextResponse.json({ received: true });
-  if (
-    sub.troca_tipo !== "upgrade" ||
-    (sub.troca_plano !== "essencial" && sub.troca_plano !== "impulso")
-  )
+  if (sub.troca_tipo !== "upgrade" || !ehPlanoTrocavel(sub.troca_plano))
     return NextResponse.json({ received: true, matched: false });
 
   const plano = await planoDoCatalogo(supabase, sub.troca_plano);
@@ -290,6 +289,8 @@ async function tratarCobrancaDeTroca(evento: unknown, pagamentoId: string) {
       contracted_amount_cents: valor,
       contracted_at: new Date().toISOString(),
       price_source: "catalogo",
+      // Números combinados de um Escala por proposta não sobrevivem à troca.
+      limites_personalizados: null,
       updated_at: new Date().toISOString(),
     })
     .eq("organization_id", sub.organization_id)

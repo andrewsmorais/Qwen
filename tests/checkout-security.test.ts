@@ -579,12 +579,12 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
       });
     },
   );
-  it("plano Escala é sob consulta: recusa antes de qualquer efeito", async () => {
+  it("plano Escala se contrata pelo checkout, com o valor da tabela", async () => {
     const res = await checkout(request({ ...base, plan_slug: "escala" }));
-    expect(res.status).toBe(400);
-    expect(m.createSubscription).not.toHaveBeenCalled();
-    expect(m.createUser).not.toHaveBeenCalled();
-    expect(m.inserts).toEqual([]);
+    expect(res.status).toBe(200);
+    expect(m.createSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({ value: 349.9, cycle: "MONTHLY" }),
+    );
   });
   it.each([0, 2, 2.5, "3"])(
     "preço é por plano: recusa quantidade de atendentes %s",

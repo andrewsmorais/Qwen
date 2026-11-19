@@ -60,7 +60,7 @@ describe("SEO/GEO — o que os robôs leem bate com a página", () => {
     expect(txt.startsWith(`# ${SITE.nome}\n\n> ${DEFINICAO}`)).toBe(true);
     expect(txt).toContain("Essencial — R$ 89,90/mês");
     expect(txt).toContain("Impulso — R$ 149,90/mês");
-    expect(txt).toContain("Escala — a partir de R$ 349,90/mês");
+    expect(txt).toContain("Escala — R$ 349,90/mês");
     // Preços e promessas que já saíram da oferta.
     expect(txt).not.toMatch(/R\$ 107|R\$ 159|R\$ 234|campanhas em massa|WhatsApp ilimitado/i);
     // O cliente não vê provedor nem modelo de IA.

@@ -42,18 +42,19 @@ describe("o valor informado é o do plano e do ciclo (preço por plano)", () => 
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>[\s\S]*?Débito[\s\S]*?Indisponível para assinaturas[\s\S]*?<\/button>/);
   });
 
-  it("cards mensais: preço por plano, os números de cada plano e o Escala sob consulta", () => {
+  it("cards mensais: preço por plano, os números de cada plano e os três pelo checkout", () => {
     const html = renderToStaticMarkup(createElement(Pricing));
     for (const total of ["89,90", "149,90", "349,90"]) expect(html).toContain(total);
     for (const numero of [
       "2 números de WhatsApp", "1 agente de IA", "1 chatbot", "CRM com 2 funis",
       "4 números de WhatsApp", "2 agentes de IA", "2 chatbots", "CRM com 4 funis",
-      "A partir de 6 números de WhatsApp", "Radar de conversas", "Só no ChatAI",
+      "6 números de WhatsApp", "3 agentes de IA", "3 chatbots", "CRM com 6 funis",
+      "Radar de conversas", "Só no ChatAI", "Cobrados à parte",
     ]) expect(html).toContain(numero);
-    // Escala é sob consulta: mostra "a partir de" e leva ao contato, não ao checkout.
-    expect(html).toContain("a partir de");
-    expect(html).toContain("Falar com especialista");
-    expect(html).toContain('href="/contato"');
+    // O Escala agora vai ao checkout como os outros: nada de "a partir de" nem contato.
+    expect(html).not.toContain("a partir de");
+    expect(html).not.toContain("Falar com especialista");
+    expect(html).not.toContain('href="/contato"');
     expect(html).not.toContain("atendente/mês");
   });
 });

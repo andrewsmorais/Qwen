@@ -42,7 +42,7 @@ export const SITE = {
    * sitemap e para o `dateModified`. Atualize à mão quando mudar a oferta —
    * data automática de build diria "mudou" a cada deploy, e isso é mentira.
    */
-  ultimaAtualizacao: "2026-11-15",
+  ultimaAtualizacao: "2026-11-19",
   paginas: [
     { caminho: "/", titulo: "Página inicial", descricao: "O que é o ChatAI Online, recursos, planos e perguntas frequentes." },
     { caminho: "/sobre-nos", titulo: "Sobre o ChatAI Online", descricao: "Missão e para quais negócios o ChatAI Online foi feito: barbearias, salões de beleza e estética, comércio e lojas, clínicas e consultórios, prestadores de serviços e manutenção." },

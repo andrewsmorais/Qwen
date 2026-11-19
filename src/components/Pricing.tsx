@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckoutModal } from "./checkout/CheckoutModal";
 import { PLANOS, selecionarPlano, type Plano, type Ciclo } from "@/lib/planos";
-import { CARDS, SO_NO_CHATAI } from "@/lib/oferta";
+import { CARDS, EXTRAS_A_PARTE, SO_NO_CHATAI } from "@/lib/oferta";
 
 /**
  * Cards de planos — a MESMA promessa que o CRM libera
@@ -232,9 +232,15 @@ export function Pricing() {
         </div>
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-sm text-[#a7a3c7]">
-          Essencial e Impulso incluem{" "}
+          Todos os planos incluem{" "}
           <strong className="text-white">7 dias de teste grátis</strong>.
           Uso de IA sem limite. Cancele quando quiser. Sem taxa de setup.
+        </p>
+        <p
+          className="mx-auto mt-3 max-w-2xl text-center text-xs text-[#a7a3c7]"
+          data-extras
+        >
+          Cobrados à parte, se você precisar: {EXTRAS_A_PARTE.join(", ")}.
         </p>
       </div>
 

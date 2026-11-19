@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { LIMPA_TROCA } from "@/lib/troca-de-plano";
 import { createSupabaseAdmin } from "@/lib/supabase";
 import {
   findOrCreateCustomer,
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "O plano Escala é sob consulta. Fale com a gente para combinar a implantação.",
+            "Este plano é sob consulta. Fale com a gente para combinar a proposta.",
         },
         { status: 400 },
       );
@@ -495,6 +496,11 @@ export async function POST(req: NextRequest) {
           asaas_subscription_id: null,
           asaas_payment_id: null,
           canceled_at: null,
+          // Recontratação começa limpa: nem troca de plano pendente da
+          // assinatura antiga, nem números combinados de um Escala por proposta
+          // (que, sem isto, voltariam pelo preço da tabela).
+          ...LIMPA_TROCA,
+          limites_personalizados: null,
         })
         .eq("id", recontratar.id)
         .eq("organization_id", targetOrgId!);

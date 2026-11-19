@@ -25,6 +25,13 @@ export const LIMPA_TROCA = {
   troca_pedida_em: null,
 } as const;
 
+/** Os planos que trocam entre si pelo CRM: os três, desde 19/11/2026. */
+export const PLANOS_TROCAVEIS = ["essencial", "impulso", "escala"] as const;
+
+export function ehPlanoTrocavel(v: unknown): v is (typeof PLANOS_TROCAVEIS)[number] {
+  return typeof v === "string" && (PLANOS_TROCAVEIS as readonly string[]).includes(v);
+}
+
 export type PlanoDoCatalogo = {
   id: string;
   price_monthly: number;
@@ -88,7 +95,7 @@ export function downgradeVenceu(
 } {
   return (
     sub.troca_tipo === "downgrade" &&
-    (sub.troca_plano === "essencial" || sub.troca_plano === "impulso") &&
+    ehPlanoTrocavel(sub.troca_plano) &&
     typeof sub.troca_efetiva_em === "string" &&
     dueDate >= sub.troca_efetiva_em.slice(0, 10)
   );
