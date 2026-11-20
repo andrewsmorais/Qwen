@@ -38,6 +38,7 @@ export const CARDS: CardDoPlano[] = [
       "Agendamento pela IA e pelo chatbot",
       "Agenda com Google Meet e aviso no seu WhatsApp",
       "Chatbot completo com modelos prontos",
+      "Recuperação de carrinho e Pix das lojas (Shopify, Yampi, Kiwify…)",
       "Respostas rápidas com foto e áudio",
       "Caixa de entrada compartilhada e chat da equipe",
       "Radar de conversas e painel ao vivo",
@@ -182,7 +183,7 @@ export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [
 },
 {
    q: "O ChatAI Online se integra com Shopify, Yampi, CartPanda, WooCommerce ou Wix?",
-   a: "Sim, a partir do plano Impulso. Você cola o endereço do ChatAI na tela de webhooks da sua loja, e cada carrinho abandonado, Pix ou boleto gerado e pedido pago entra sozinho no CRM, com o produto, o valor e o link do checkout. O agente de IA ou o follow-up chama o cliente no WhatsApp para recuperar a venda. Kiwify, Hotmart e Cakto funcionam do mesmo jeito; a Nuvemshop está em breve."
+   a: "Sim, em todos os planos. Você cola o endereço do ChatAI na tela de webhooks da sua loja, e cada carrinho abandonado, Pix ou boleto gerado e pedido pago entra sozinho no CRM, com o produto, o valor e o link do checkout. Um follow-up chama o cliente no WhatsApp para recuperar a venda: no Essencial, com mensagem pronta; a partir do Impulso, também com a mensagem escrita pela IA. Kiwify, Hotmart e Cakto funcionam do mesmo jeito; a Nuvemshop está em breve."
 },
 {
    q: "O Agente consegue atender em outros idiomas?",
