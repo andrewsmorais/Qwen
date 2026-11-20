@@ -147,7 +147,8 @@ const RESPOSTA_DO_PRECO =
   `Há três planos: Essencial por ${brl(PLANOS.essencial.price_monthly)} por mês, ` +
   `Impulso por ${brl(PLANOS.impulso.price_monthly)} por mês e Escala por ` +
   `${brl(PLANOS.escala.price_monthly)} por mês. No trimestral há 10% ` +
-  "de desconto e no anual, 20%. Os três começam com 7 dias grátis e se contratam direto na página.";
+  "de desconto e no anual, 20%. Os três começam com 7 dias grátis no cartão de crédito (sem cobrança " +
+  "durante o teste) e se contratam direto na página; no Pix ou boleto, a primeira cobrança é na hora.";
 
 /** As perguntas frequentes da página — a mesma lista vira o FAQPage do JSON-LD. */
 export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [

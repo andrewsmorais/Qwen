@@ -35,7 +35,7 @@ export function gerarLlmsTxt(completo = false): string {
     l.push("");
   }
   l.push(
-    "Trimestral com 10% de desconto e anual com 20%. Essencial e Impulso incluem 7 dias de teste grátis. Uso de IA sem limite, sem taxa de setup, cancele quando quiser.",
+    "Trimestral com 10% de desconto e anual com 20%. Os três planos incluem 7 dias de teste grátis no cartão de crédito (no Pix ou boleto, a primeira cobrança é na hora). Uso de IA sem limite, sem taxa de setup, cancele quando quiser.",
     "",
   );
 

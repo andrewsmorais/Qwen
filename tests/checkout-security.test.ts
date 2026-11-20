@@ -521,16 +521,34 @@ describe("contrato, período de teste e autoridade do preço na rota", () => {
       ORG,
     ]);
   });
-  it.each(["CREDIT_CARD", "PIX", "BOLETO"])(
-    "%s inicia teste, sem registrar pagamento ativo",
+  it("CREDIT_CARD inicia teste, sem registrar pagamento ativo", async () => {
+    const res = await checkout(
+      request({
+        ...base,
+        billing_type: "CREDIT_CARD",
+        credit_card_token: "token-ficticio",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ status: "trialing", seats: 1 });
+    expect(m.subscription).toMatchObject({
+      status: "trialing",
+      asaas_payment_id: null,
+    });
+    expect(m.updates.some((update) => update.status === "active")).toBe(false);
+  });
+  it.each(["PIX", "BOLETO"])(
+    "%s não ganha teste (só no cartão): cobrança hoje e espera o pagamento",
     async (billing_type) => {
-      const res = await checkout(
-        request({ ...base, billing_type, credit_card_token: "token-ficticio" }),
-      );
+      const res = await checkout(request({ ...base, billing_type }));
       expect(res.status).toBe(200);
-      expect(await res.json()).toMatchObject({ status: "trialing", seats: 1 });
+      expect(await res.json()).toMatchObject({ status: "pending", seats: 1 });
+      const hoje = new Date().toISOString().split("T")[0];
+      expect(m.createSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({ nextDueDate: hoje }),
+      );
       expect(m.subscription).toMatchObject({
-        status: "trialing",
+        status: "pending",
         asaas_payment_id: null,
       });
       expect(m.updates.some((update) => update.status === "active")).toBe(

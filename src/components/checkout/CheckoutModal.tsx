@@ -56,7 +56,7 @@ export function CheckoutModal({
 
   // Sucesso
   const [isSuccess, setIsSuccess] = useState(false);
-  /** O teste grátis é um por empresa: sem ele, a primeira cobrança vence hoje. */
+  /** O teste grátis é um por empresa e só no cartão: sem ele, a primeira cobrança vence hoje. */
   const [comTeste, setComTeste] = useState(true);
   const {
     ligado: captchaLigado,
@@ -352,9 +352,9 @@ export function CheckoutModal({
               ? payData.payment_id
               : null,
         });
-        handleSuccess(); // PIX e BOLETO também são liberados imediatamente no modo Trial
+        handleSuccess(); // Pix: a fatura vence hoje; o CRM abre quando for paga
       } else if (method === "BOLETO") {
-        handleSuccess(); // PIX e BOLETO também são liberados imediatamente no modo Trial
+        handleSuccess(); // Boleto: idem
       } else {
         // Cartão aprovado e agendado
         handleSuccess();
@@ -393,7 +393,9 @@ export function CheckoutModal({
             <p className="text-slate-600 mb-8 text-lg">
               {comTeste
                 ? "Seu plano foi registrado. Entre no CRM com o e-mail e a senha da sua conta para configurar seu agente."
-                : "Este CPF/CNPJ já usou o teste grátis, então a primeira cobrança vence hoje. Assim que ela for paga, o CRM é liberado — entre com o e-mail e a senha da sua conta."}
+                : method === "PIX" || method === "BOLETO"
+                  ? "O teste grátis é só no cartão de crédito, então a primeira cobrança vence hoje. Assim que ela for paga, o CRM é liberado — entre com o e-mail e a senha da sua conta."
+                  : "Este CPF/CNPJ já usou o teste grátis, então a primeira cobrança vence hoje. Assim que ela for paga, o CRM é liberado — entre com o e-mail e a senha da sua conta."}
             </p>
             <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -409,7 +411,7 @@ export function CheckoutModal({
               <div className="flex items-center justify-between">
                 <p className="text-slate-500">Plano {PLANOS[planType].name}</p>
                 <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
-                  7 Dias Grátis
+                  7 dias grátis no cartão
                 </span>
               </div>
             </div>
@@ -420,8 +422,9 @@ export function CheckoutModal({
               </div>
             )}
             <p className="mb-6 text-xs text-slate-500">
-              O teste grátis é um por empresa (CPF/CNPJ). Quem já contratou paga
-              a primeira cobrança no ato.
+              O teste grátis é um por empresa (CPF/CNPJ) e só no cartão de
+              crédito. No Pix ou boleto, e para quem já contratou, a primeira
+              cobrança vence no ato.
             </p>
 
             {/* FORMULÁRIO COMPLETO */}
@@ -436,7 +439,9 @@ export function CheckoutModal({
                   aria-live="polite"
                 >
                   {selecao
-                    ? `Plano ${selecao.plano.name}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
+                    ? method === "CREDIT_CARD"
+                      ? `Plano ${selecao.plano.name}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, após os 7 dias grátis.`
+                      : `Plano ${selecao.plano.name}: ${moeda.format(selecao.value)} por ${nomeDoCiclo[billingCycle]}, com a primeira cobrança hoje (o teste grátis é só no cartão).`
                     : "Não foi possível conferir o plano escolhido."}
                 </p>
               </div>
@@ -668,16 +673,14 @@ export function CheckoutModal({
                 )}
                 {(method === "PIX" || method === "BOLETO") && selecao && (
                   <div className="bg-amber-50 border border-amber-100 text-amber-700 text-sm p-4 rounded-xl mb-6">
-                    <strong>Aviso importante:</strong> Será gerada uma fatura de{" "}
-                    {moeda.format(selecao.value)} por{" "}
-                    {nomeDoCiclo[billingCycle]}, com vencimento após os 7 dias
-                    de teste grátis (ou hoje, se este CPF/CNPJ já usou o teste).
-                    Seu{" "}
-                    <strong>
-                      acesso de teste será liberado após a confirmação do
-                      cadastro
-                    </strong>
-                    . Pague até o vencimento para continuar usando seu plano.
+                    <strong>Aviso importante:</strong> o teste grátis de 7 dias
+                    é <strong>só no cartão de crédito</strong>. No{" "}
+                    {method === "PIX" ? "Pix" : "boleto"}, será gerada uma
+                    fatura de {moeda.format(selecao.value)} por{" "}
+                    {nomeDoCiclo[billingCycle]}, com{" "}
+                    <strong>vencimento hoje</strong>, e o CRM é liberado assim
+                    que ela for paga. Quer testar antes de pagar? Escolha
+                    Crédito: o cartão não é cobrado durante o teste.
                   </div>
                 )}
 
@@ -754,7 +757,9 @@ export function CheckoutModal({
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                 {loading
                   ? "Processando e validando..."
-                  : "Começar 7 dias grátis"}
+                  : method === "CREDIT_CARD"
+                    ? "Começar 7 dias grátis"
+                    : "Contratar e pagar agora"}
               </button>
             </form>
           </div>

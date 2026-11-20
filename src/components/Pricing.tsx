@@ -137,11 +137,12 @@ export function Pricing() {
                   {sobConsulta ? (
                     "Proposta sob medida para a sua operação"
                   ) : period === "mensal" ? (
-                    "7 dias grátis"
+                    "7 dias grátis no cartão"
                   ) : (
                     <span className="flex flex-col gap-1.5">
                       <span>
-                        7 dias grátis · cobrado {moeda.format(selecao.value)}{" "}
+                        7 dias grátis no cartão · cobrado{" "}
+                        {moeda.format(selecao.value)}{" "}
                         por {periodo.nome}
                       </span>
                       <span className="w-fit rounded-full border border-emerald-500/30 bg-emerald-900/40 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
@@ -233,7 +234,8 @@ export function Pricing() {
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-sm text-[#a7a3c7]">
           Todos os planos incluem{" "}
-          <strong className="text-white">7 dias de teste grátis</strong>.
+          <strong className="text-white">7 dias de teste grátis</strong> no
+          cartão de crédito, sem cobrança durante o teste.
           Uso de IA sem limite. Cancele quando quiser. Sem taxa de setup.
         </p>
         <p

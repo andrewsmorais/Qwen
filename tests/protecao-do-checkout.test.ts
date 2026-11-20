@@ -79,17 +79,25 @@ describe("CAPTCHA (Turnstile)", () => {
   });
 });
 
-describe("um teste grátis por empresa", () => {
+describe("um teste grátis por empresa, e só no cartão", () => {
+  const cartao = "CREDIT_CARD";
   it("documento novo ganha os 7 dias; recontratação ou documento que já contratou, não", () => {
     expect(
-      temDireitoAoTeste({ recontratacao: false, outrasComAssinatura: 0 }),
+      temDireitoAoTeste({ recontratacao: false, outrasComAssinatura: 0, formaDePagamento: cartao }),
     ).toBe(true);
     expect(
-      temDireitoAoTeste({ recontratacao: true, outrasComAssinatura: 0 }),
+      temDireitoAoTeste({ recontratacao: true, outrasComAssinatura: 0, formaDePagamento: cartao }),
     ).toBe(false);
     expect(
-      temDireitoAoTeste({ recontratacao: false, outrasComAssinatura: 1 }),
+      temDireitoAoTeste({ recontratacao: false, outrasComAssinatura: 1, formaDePagamento: cartao }),
     ).toBe(false);
+  });
+
+  it("Pix e boleto não dão teste: pagam a primeira cobrança no ato (achado 12)", () => {
+    for (const forma of ["PIX", "BOLETO", "DEBIT_CARD", ""])
+      expect(
+        temDireitoAoTeste({ recontratacao: false, outrasComAssinatura: 0, formaDePagamento: forma }),
+      ).toBe(false);
   });
 
   it("a primeira cobrança vence em 7 dias com teste, e hoje sem", () => {

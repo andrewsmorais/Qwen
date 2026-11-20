@@ -598,9 +598,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // 5. Criação de Assinatura no Asaas. Teste de 7 dias: UM por empresa
-    // (`lib/teste-gratis.ts`). Recontratação, ou documento que já contratou em
-    // outra organização, paga a primeira cobrança no ato.
+    // 5. Criação de Assinatura no Asaas. Teste de 7 dias: UM por empresa e SÓ
+    // no cartão (`lib/teste-gratis.ts`). Pix, boleto, recontratação ou documento
+    // que já contratou em outra organização pagam a primeira cobrança no ato.
     const { data: mesmasEmpresas, error: historicoError } = await supabase
       .from("organizations")
       .select("id, subscriptions!inner(asaas_subscription_id)")
@@ -619,6 +619,7 @@ export async function POST(req: NextRequest) {
     const comTeste = temDireitoAoTeste({
       recontratacao: Boolean(recontratar),
       outrasComAssinatura: mesmasEmpresas?.length ?? 0,
+      formaDePagamento: billingType,
     });
     const nextDueDate = primeiraCobranca(comTeste, now);
 
@@ -640,8 +641,8 @@ export async function POST(req: NextRequest) {
     const subscription = await createSubscription(subParams);
 
     // 6. Registro no Supabase (Status conforme Ajuste 2: trialing ou pending, NUNCA active)
-    // O teste de sete dias faz parte do contrato de todos os meios. A primeira
-    // cobrança só vence depois dele; criar assinatura não confirma pagamento.
+    // O teste de sete dias é só do cartão. A primeira cobrança só vence depois
+    // dele; criar assinatura não confirma pagamento.
     // Sem teste, a organização espera a primeira cobrança ser paga (o webhook a
     // marca ativa); o CRM mostra o botão de pagar a fatura em aberto.
     const initialStatus = comTeste ? "trialing" : "pending";

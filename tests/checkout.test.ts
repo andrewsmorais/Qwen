@@ -163,6 +163,12 @@ const body = {
     cpfCnpj: "12345678901",
   },
 };
+/** O teste grátis é só no cartão (19/11/2026, achado 12). */
+const cartao = {
+  ...body,
+  billing_type: "CREDIT_CARD",
+  credit_card_token: "token-ficticio",
+};
 const secret = "segredo-exclusivo-de-teste-sem-valor-real";
 
 beforeEach(() => {
@@ -194,6 +200,10 @@ beforeEach(() => {
   m.customer.mockResolvedValue({ id: "cus_teste" });
   m.payments.mockResolvedValue({ data: [] });
   vi.stubEnv("ASAAS_WEBHOOK_SECRET", secret);
+  // O cartão exige origem atestada; em desenvolvimento, contra o sandbox, o
+  // localhost conta (lib/asaas/origem-cartao.ts).
+  vi.stubEnv("NODE_ENV", "development");
+  vi.stubEnv("ASAAS_BASE_URL", "https://api-sandbox.asaas.com");
   vi.stubGlobal(
     "fetch",
     vi.fn(() => {
@@ -226,12 +236,20 @@ describe("um teste grátis por empresa (11/11/2026)", () => {
     expect(await res.json()).toMatchObject({ status: "pending" });
   });
 
-  it("controle: documento novo ganha os 7 dias (trialing, cobrança daqui a 7 dias)", async () => {
-    const res = await checkout(request(body));
+  it("controle: documento novo no cartão ganha os 7 dias (trialing, cobrança daqui a 7 dias)", async () => {
+    const res = await checkout(request(cartao));
     expect(res.status).toBe(200);
     const em7 = new Date(Date.now() + 7 * 86_400_000).toISOString().split("T")[0];
     expect(m.criar).toHaveBeenCalledWith(expect.objectContaining({ nextDueDate: em7 }));
     expect(m.updates[0]).toMatchObject({ status: "trialing" });
+  });
+
+  it("documento novo no Pix: sem teste, cobrança hoje e status pending", async () => {
+    const res = await checkout(request(body));
+    expect(res.status).toBe(200);
+    const hoje = new Date().toISOString().split("T")[0];
+    expect(m.criar).toHaveBeenCalledWith(expect.objectContaining({ nextDueDate: hoje }));
+    expect(m.updates[0]).toMatchObject({ status: "pending" });
   });
 });
 
@@ -242,7 +260,7 @@ describe("checkout sem nenhuma chamada financeira real", () => {
     ["yearly", 1439.04],
   ])("Impulso %s cobra o ciclo completo do plano", async (cycle, value) => {
     const res = await checkout(
-      request({ ...body, billing_cycle: cycle, value: 0.01 }),
+      request({ ...cartao, billing_cycle: cycle, value: 0.01 }),
     );
     expect(res.status).toBe(200);
     expect(m.criar).toHaveBeenCalledWith(

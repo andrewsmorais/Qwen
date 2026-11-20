@@ -50,7 +50,7 @@ export default function TermosPage() {
             <strong className="text-slate-900">2.1.</strong> Para usar o ChatAI Online é preciso fazer um cadastro com informações verdadeiras e completas. O USUÁRIO declara ter capacidade legal para contratar (ou representar a empresa que contrata) e é responsável por manter sua senha em sigilo e por tudo o que for feito com a sua conta.
           </p>
           <p>
-            <strong className="text-slate-900">2.2.</strong> Os planos Essencial e Impulso incluem <strong className="text-slate-900">7 (sete) dias de teste grátis</strong>, com os recursos do plano escolhido. Ao iniciar o teste, o USUÁRIO escolhe a forma de pagamento. No cartão de crédito, não há cobrança durante o teste e a primeira cobrança ocorre ao fim dos 7 dias. Em Pix ou boleto, a fatura é gerada na contratação e o acesso é liberado imediatamente, com pagamento em até 7 dias.
+            <strong className="text-slate-900">2.2.</strong> Os planos Essencial, Impulso e Escala incluem <strong className="text-slate-900">7 (sete) dias de teste grátis</strong>, com os recursos do plano escolhido, quando a forma de pagamento é o cartão de crédito. No cartão, não há cobrança durante o teste e a primeira cobrança ocorre ao fim dos 7 dias. Em Pix ou boleto não há teste grátis: a fatura é gerada na contratação com vencimento no mesmo dia, e o acesso é liberado assim que o pagamento for confirmado.
           </p>
           <p>
             <strong className="text-slate-900">2.3.</strong> Se o pagamento não for confirmado ao fim do teste, o acesso é suspenso. O USUÁRIO pode cancelar antes do fim do teste para não ser cobrado.
