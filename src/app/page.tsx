@@ -445,45 +445,95 @@ export default function Home() {
         {/* SECTION 7: Integrações */}
         <section id="integracoes" className="bg-gradient-to-br from-[#1e1b4b] via-[#272370] to-[#312e81] py-24 relative overflow-hidden">
            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-           
+
            <div className="max-w-5xl mx-auto px-6 text-center">
+              <span className="inline-block mb-4 rounded-full bg-indigo-500/15 border border-indigo-400/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-200">
+                 Em todos os planos
+              </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-                 Se integra com as principais ferramentas do mercado
+                 Integração com Shopify, Nuvemshop, Yampi e as lojas que mais vendem
               </h2>
-              <p className="text-base md:text-lg text-slate-400 mb-14">
-                 Carrinho abandonado, Pix gerado e pedido pago chegam sozinhos ao CRM, e o agente de IA chama o cliente no WhatsApp
+              <p className="text-base md:text-lg text-slate-300 mb-12 max-w-3xl mx-auto">
+                 Conecte sua loja e o ChatAI Online recupera a venda pelo WhatsApp: carrinho abandonado, Pix ou boleto gerado e não pago, e o pedido pago marcado no funil
               </p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-10">
+
+              {/* Como funciona com a loja — o que o CRM faz de verdade (conferido em 20/11/2026). */}
+              <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12 text-left">
                  {[
-                    // O que cada integração faz de verdade hoje (conferido no CRM em 20/11/2026).
-                    // Mudou no CRM, muda aqui: as IAs citam esta lista.
-                    { name: 'Shopify', domain: 'shopify.com', faz: 'Carrinho e pedidos' },
-                    { name: 'Yampi', domain: 'yampi.com.br', faz: 'Carrinho e pedidos' },
-                    { name: 'CartPanda', domain: 'cartpanda.com', faz: 'Carrinho e pedidos' },
-                    { name: 'WooCommerce', domain: 'woocommerce.com', faz: 'Pedidos' },
-                    { name: 'Wix', domain: 'wix.com', faz: 'Pedidos' },
-                    { name: 'Nuvemshop', domain: 'nuvemshop.com.br', faz: 'Pedidos', badge: 'Em breve' },
-                    { name: 'Kiwify', domain: 'kiwify.com.br', faz: 'Vendas e carrinho' },
-                    { name: 'Hotmart', domain: 'hotmart.com', faz: 'Vendas e Pix' },
-                    { name: 'Cakto', domain: 'cakto.com.br', faz: 'Vendas e carrinho' },
-                    { name: 'Meta', domain: 'meta.com', faz: 'Conversões dos anúncios' },
-                    { name: 'Google Ads', domain: 'ads.google.com', faz: 'Conversões dos anúncios' },
-                    { name: 'RD Station', domain: 'rdstation.com', faz: 'Leads' },
-                    { name: 'Zapier', domain: 'zapier.com', faz: 'Make, n8n e API' },
-                 ].map(tool => (
-                    <div key={tool.name} className="relative flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl p-5 w-full hover:border-indigo-500 hover:-translate-y-1 transform transition-all duration-300 cursor-pointer group shadow-lg">
-                       {tool.badge && (
-                          <span className="absolute -top-2.5 right-2 bg-indigo-600 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border border-indigo-500/50 shadow-sm shadow-indigo-600/30 z-10">
-                             {tool.badge}
-                          </span>
-                       )}
-                       <img src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=128`} alt={tool.name} className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform rounded-md bg-white p-1 object-contain" />
-                       <span className="text-slate-300 text-sm font-medium">{tool.name}</span>
-                       <span className="mt-0.5 text-[11px] text-slate-400">{tool.faz}</span>
+                    {
+                       t: 'Carrinho abandonado',
+                       d: 'A pessoa saiu do checkout? Ela vira contato no funil e recebe no WhatsApp o link que retoma a compra.',
+                    },
+                    {
+                       t: 'Pix e boleto gerados',
+                       d: 'Gerou e não pagou: o lembrete sai sozinho e para na hora em que o pagamento entra.',
+                    },
+                    {
+                       t: 'Venda paga e campanha',
+                       d: 'O pedido pago move o negócio no funil. Com a venda marcada como ganha, ela volta para o anúncio da Meta ou do Google que trouxe o cliente.',
+                    },
+                 ].map((item) => (
+                    <div key={item.t} className="rounded-xl border border-white/10 bg-white/5 p-5">
+                       <h3 className="text-white font-semibold mb-1.5">{item.t}</h3>
+                       <p className="text-sm text-slate-300 leading-relaxed">{item.d}</p>
                     </div>
                  ))}
               </div>
+
+              {[
+                 {
+                    // O que cada integração faz de verdade hoje (conferido no CRM em 20/11/2026).
+                    // Mudou no CRM, muda aqui: as IAs citam esta lista.
+                    grupo: 'Lojas virtuais',
+                    nota: 'Conexão direta com a loja',
+                    itens: [
+                       { name: 'Shopify', domain: 'shopify.com', faz: 'Carrinho e pedidos' },
+                       { name: 'Nuvemshop', domain: 'nuvemshop.com.br', faz: 'Carrinho e pedidos', badge: 'Em breve' },
+                       { name: 'Yampi', domain: 'yampi.com.br', faz: 'Carrinho e pedidos' },
+                       { name: 'CartPanda', domain: 'cartpanda.com', faz: 'Carrinho e pedidos' },
+                       { name: 'WooCommerce', domain: 'woocommerce.com', faz: 'Pedidos' },
+                       { name: 'Wix', domain: 'wix.com', faz: 'Pedidos' },
+                    ],
+                 },
+                 {
+                    grupo: 'Plataformas de pagamento e afiliados',
+                    nota: 'Pelo webhook: é só colar o endereço no painel da plataforma',
+                    itens: [
+                       { name: 'Kiwify', domain: 'kiwify.com.br', faz: 'Vendas e carrinho' },
+                       { name: 'Hotmart', domain: 'hotmart.com', faz: 'Vendas e Pix' },
+                       { name: 'Cakto', domain: 'cakto.com.br', faz: 'Vendas e carrinho' },
+                    ],
+                 },
+                 {
+                    grupo: 'Anúncios e outras ferramentas',
+                    nota: 'Saiba qual campanha trouxe cada cliente',
+                    itens: [
+                       { name: 'Meta', domain: 'meta.com', faz: 'Conversões dos anúncios' },
+                       { name: 'Google Ads', domain: 'ads.google.com', faz: 'Conversões dos anúncios' },
+                       { name: 'RD Station', domain: 'rdstation.com', faz: 'Leads' },
+                       { name: 'Zapier', domain: 'zapier.com', faz: 'Make, n8n e API' },
+                    ],
+                 },
+              ].map((bloco) => (
+                 <div key={bloco.grupo} className="max-w-4xl mx-auto mb-10 last:mb-0">
+                    <h3 className="text-lg font-semibold text-white">{bloco.grupo}</h3>
+                    <p className="text-sm text-slate-400 mb-5">{bloco.nota}</p>
+                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 ${bloco.itens.length === 4 ? "lg:grid-cols-4" : ""}`}>
+                       {bloco.itens.map(tool => (
+                          <div key={tool.name} className="relative flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl p-5 w-full hover:border-indigo-500 hover:-translate-y-1 transform transition-all duration-300 group shadow-lg">
+                             {'badge' in tool && tool.badge && (
+                                <span className="absolute -top-2.5 right-2 bg-indigo-600 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border border-indigo-500/50 shadow-sm shadow-indigo-600/30 z-10">
+                                   {tool.badge}
+                                </span>
+                             )}
+                             <img src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=128`} alt={tool.name} className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform rounded-md bg-white p-1 object-contain" />
+                             <span className="text-slate-200 text-sm font-medium">{tool.name}</span>
+                             <span className="mt-0.5 text-[11px] text-slate-400">{tool.faz}</span>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              ))}
            </div>
         </section>
 
