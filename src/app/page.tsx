@@ -348,9 +348,9 @@ export default function Home() {
                      {[
                         "Follow-up automático com quem já conversou com você, sem disparo em massa",
                         "Múltiplos atendentes humanos no mesmo número com agente AI",
-                        "Relatórios avançados e métricas de conversão (Em breve: integração com Meta e Google Ads)",
+                        "Relatórios avançados e métricas de conversão, com a venda devolvida aos anúncios da Meta e do Google Ads",
                         "Tags, etiquetas e organização visual em Kanban (Funil)",
-                        "Integração facilitada via API e Webhooks para e-commerce"
+                        "Integração com Shopify, Yampi, CartPanda, WooCommerce e Wix: carrinho abandonado e Pix gerado viram recuperação no WhatsApp"
                      ].map((item, i) => (
                         <li key={i} className="flex items-center gap-4">
                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
@@ -451,23 +451,26 @@ export default function Home() {
                  Se integra com as principais ferramentas do mercado
               </h2>
               <p className="text-base md:text-lg text-slate-400 mb-14">
-                 Conecte seu CRM às plataformas que você já usa
+                 Carrinho abandonado, Pix gerado e pedido pago chegam sozinhos ao CRM, e o agente de IA chama o cliente no WhatsApp
               </p>
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-10">
                  {[
-                    { name: 'Shopify', domain: 'shopify.com' },
-                    { name: 'Nuvemshop', domain: 'nuvemshop.com.br', badge: 'Nativo' },
-                    { name: 'CartPanda', domain: 'cartpanda.com' },
-                    { name: 'WooCommerce', domain: 'woocommerce.com' },
-                    { name: 'Yampi', domain: 'yampi.com.br' },
-                    { name: 'Meta', domain: 'meta.com' },
-                    { name: 'Google Ads', domain: 'ads.google.com' },
-                    { name: 'Hotmart', domain: 'hotmart.com' },
-                    { name: 'Kiwify', domain: 'kiwify.com.br' },
-                    { name: 'RD Station', domain: 'rdstation.com' },
-                    { name: 'Mercado Pago', domain: 'mercadopago.com.br' },
-                    { name: 'Zapier', domain: 'zapier.com' },
+                    // O que cada integração faz de verdade hoje (conferido no CRM em 20/11/2026).
+                    // Mudou no CRM, muda aqui: as IAs citam esta lista.
+                    { name: 'Shopify', domain: 'shopify.com', faz: 'Carrinho e pedidos' },
+                    { name: 'Yampi', domain: 'yampi.com.br', faz: 'Carrinho e pedidos' },
+                    { name: 'CartPanda', domain: 'cartpanda.com', faz: 'Carrinho e pedidos' },
+                    { name: 'WooCommerce', domain: 'woocommerce.com', faz: 'Pedidos' },
+                    { name: 'Wix', domain: 'wix.com', faz: 'Pedidos' },
+                    { name: 'Nuvemshop', domain: 'nuvemshop.com.br', faz: 'Pedidos', badge: 'Em breve' },
+                    { name: 'Kiwify', domain: 'kiwify.com.br', faz: 'Vendas e carrinho' },
+                    { name: 'Hotmart', domain: 'hotmart.com', faz: 'Vendas e Pix' },
+                    { name: 'Cakto', domain: 'cakto.com.br', faz: 'Vendas e carrinho' },
+                    { name: 'Meta', domain: 'meta.com', faz: 'Conversões dos anúncios' },
+                    { name: 'Google Ads', domain: 'ads.google.com', faz: 'Conversões dos anúncios' },
+                    { name: 'RD Station', domain: 'rdstation.com', faz: 'Leads' },
+                    { name: 'Zapier', domain: 'zapier.com', faz: 'Make, n8n e API' },
                  ].map(tool => (
                     <div key={tool.name} className="relative flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl p-5 w-full hover:border-indigo-500 hover:-translate-y-1 transform transition-all duration-300 cursor-pointer group shadow-lg">
                        {tool.badge && (
@@ -477,6 +480,7 @@ export default function Home() {
                        )}
                        <img src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=128`} alt={tool.name} className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform rounded-md bg-white p-1 object-contain" />
                        <span className="text-slate-300 text-sm font-medium">{tool.name}</span>
+                       <span className="mt-0.5 text-[11px] text-slate-400">{tool.faz}</span>
                     </div>
                  ))}
               </div>
