@@ -1,4 +1,5 @@
 import { PLANOS } from "@/lib/planos";
+import { linkDoWhatsapp } from "@/lib/urls";
 import { CARDS, PERGUNTAS_FREQUENTES, SEGMENTOS, SO_NO_CHATAI } from "@/lib/oferta";
 import { SITE, precoLegivel } from "@/lib/seo/site";
 
@@ -21,6 +22,9 @@ export function gerarLlmsTxt(completo = false): string {
   l.push("## Páginas", "");
   for (const p of SITE.paginas) l.push(`- [${p.titulo}](${SITE.url}${p.caminho === "/" ? "" : p.caminho}): ${p.descricao}`);
   l.push(`- [Entrar no CRM](${SITE.crm}): acesso de quem já é cliente.`);
+  l.push(
+    `- [Testar o agente de IA no WhatsApp](${linkDoWhatsapp("Olá! Quero testar o agente de IA do ChatAI Online.")}): conversa com o agente de IA do ChatAI Online, que atende e vende pelo WhatsApp.`,
+  );
   l.push(`- Busca no site: ${SITE.url}/busca?q={termo} (planos, recursos e perguntas frequentes).`);
   if (!completo) l.push(`- [Versão completa deste resumo](${SITE.url}/llms-full.txt): inclui para quais negócios o ChatAI Online foi feito.`);
   l.push("");

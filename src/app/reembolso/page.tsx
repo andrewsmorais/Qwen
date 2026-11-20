@@ -1,16 +1,14 @@
 ﻿import { Header } from '@/components/Header';
+import { jsonLdDaPagina, jsonLdSeguro, metadadosDaPagina } from '@/lib/seo/site';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export const metadata = {
-  title: 'Política de Reembolso',
-  alternates: { canonical: '/reembolso' },
-  description: 'Política de Cancelamento e Reembolso do ChatAI Online',
-};
+export const metadata = metadadosDaPagina('/reembolso');
 
 export default function ReembolsoPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(jsonLdDaPagina('/reembolso')) }} />
       <Header />
     <div className="min-h-screen pt-24 bg-white text-slate-700 py-16 px-6 font-sans">
       <div className="max-w-4xl mx-auto">

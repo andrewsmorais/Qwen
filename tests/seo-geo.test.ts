@@ -1,12 +1,17 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { PLANOS } from "@/lib/planos";
 import { CARDS, DEFINICAO, PERGUNTAS_FREQUENTES } from "@/lib/oferta";
 import { gerarLlmsTxt } from "@/lib/seo/llms";
+import sitemap from "@/app/sitemap";
+import { WHATSAPP_COMERCIAL, linkDoWhatsapp } from "@/lib/urls";
 import {
+  IMAGEM_DE_COMPARTILHAMENTO,
   SITE,
+  jsonLdDaPagina,
+  metadadosDaPagina,
   jsonLdOrganizacao,
   jsonLdPerguntas,
   jsonLdProduto,
@@ -98,5 +103,58 @@ describe("busca interna", () => {
 
   it("todo resultado leva a um endereço do próprio site", () => {
     for (const r of buscar("whatsapp ia plano funil")) expect(r.url.startsWith("/")).toBe(true);
+  });
+});
+
+describe("SEO por página (20/11/2026)", () => {
+  const internas = SITE.paginas.filter((p) => p.caminho !== "/");
+
+  it("cada página interna tem título, descrição, canonical e cartão de compartilhamento PRÓPRIOS", () => {
+    const titulos = new Set<string>();
+    for (const p of internas) {
+      const m = metadadosDaPagina(p.caminho);
+      const og = m.openGraph as Record<string, unknown>;
+      expect(m.alternates?.canonical).toBe(p.caminho);
+      expect(og.url).toBe(p.caminho);
+      expect(og.title).toContain(p.tituloSeo);
+      expect(og.images).toEqual([IMAGEM_DE_COMPARTILHAMENTO]);
+      expect((m.twitter as Record<string, unknown>).images).toEqual([IMAGEM_DE_COMPARTILHAMENTO]);
+      expect(p.descricao.length).toBeGreaterThan(70);
+      expect(p.descricao.length).toBeLessThanOrEqual(185);
+      titulos.add(p.tituloSeo);
+    }
+    // Título repetido entre páginas é o primeiro problema que o Google aponta.
+    expect(titulos.size).toBe(internas.length);
+  });
+
+  it("a imagem de compartilhamento existe e tem 1200×630", () => {
+    const arquivo = path.resolve(__dirname, "../public", IMAGEM_DE_COMPARTILHAMENTO.url.slice(1));
+    expect(existsSync(arquivo)).toBe(true);
+    const cabecalho = readFileSync(arquivo);
+    expect(cabecalho.readUInt32BE(16)).toBe(1200);
+    expect(cabecalho.readUInt32BE(20)).toBe(630);
+  });
+
+  it("toda página interna traz a migalha Início › Página e o tipo certo", () => {
+    for (const p of internas) {
+      const grafo = jsonLdDaPagina(p.caminho)["@graph"] as Array<Record<string, unknown>>;
+      expect(grafo[0]["@type"]).toBe(p.tipo);
+      const migalha = grafo[1].itemListElement as Array<Record<string, unknown>>;
+      expect(migalha.map((i) => i.item)).toEqual([SITE.url, `${SITE.url}${p.caminho}`]);
+    }
+  });
+
+  it("o mapa do site usa o MESMO endereço que o canonical de cada página", () => {
+    for (const item of sitemap()) {
+      const caminho = item.url.slice(SITE.url.length) || "/";
+      expect(SITE.paginas.some((p) => p.caminho === caminho)).toBe(true);
+    }
+    expect(sitemap()[0].url).toBe(SITE.url);
+  });
+
+  it("o botão 'Testar o agente' leva ao mesmo WhatsApp comercial do site", () => {
+    expect(SITE.whatsappComercial.replace(/\D/g, "")).toBe(WHATSAPP_COMERCIAL);
+    expect(linkDoWhatsapp("oi")).toBe(`https://wa.me/${WHATSAPP_COMERCIAL}?text=oi`);
+    expect(gerarLlmsTxt(false)).toContain(`https://wa.me/${WHATSAPP_COMERCIAL}`);
   });
 });

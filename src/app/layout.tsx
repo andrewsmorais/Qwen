@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SITE, jsonLdOrganizacao, jsonLdSeguro, jsonLdSite } from "@/lib/seo/site";
+import { IMAGEM_DE_COMPARTILHAMENTO, SITE, jsonLdOrganizacao, jsonLdSeguro, jsonLdSite } from "@/lib/seo/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,22 +31,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://chataionline.io",
+    url: "/",
     siteName: "ChatAI Online",
     title: "ChatAI Online | CRM com IA para WhatsApp que vende por você",
     description:
       "Atenda centenas de clientes no WhatsApp com IA treinada no DNA do seu negócio. Qualifique leads, envie Pix e feche vendas 24h por dia.",
-    images: [
-      {
-        url: "/hero-phone.png",
-        width: 480,
-        height: 960,
-        alt: "ChatAI Online - Agente de IA atendendo no WhatsApp",
-      },
-    ],
+    // 1200×630, o tamanho que WhatsApp, Google e redes sociais pedem.
+    images: [IMAGEM_DE_COMPARTILHAMENTO],
   },
   twitter: {
     card: "summary_large_image",
+    images: [IMAGEM_DE_COMPARTILHAMENTO],
     title: "ChatAI Online | CRM com IA para WhatsApp que vende por você",
     description:
       "Atenda centenas de clientes no WhatsApp com IA treinada no DNA do seu negócio. Qualifique leads, envie Pix e feche vendas 24h por dia.",
@@ -54,6 +49,16 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  // Verificação de dono no Google Search Console e no Bing Webmaster Tools,
+  // quando feita pela etiqueta HTML (o código vem do próprio painel). Sem as
+  // variáveis, nada é impresso — a verificação pelo DNS dispensa as duas.
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+      : {}),
   },
 };
 

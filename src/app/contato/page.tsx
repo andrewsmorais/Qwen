@@ -1,15 +1,13 @@
 import Link from 'next/link';
+import { jsonLdDaPagina, jsonLdSeguro, metadadosDaPagina } from '@/lib/seo/site';
 import { ArrowLeft, MessageCircle, Mail, MapPin, Clock } from 'lucide-react';
 
-export const metadata = {
-  title: 'Contato',
-  alternates: { canonical: '/contato' },
-  description: 'Fale com a equipe da ChatAI Online',
-};
+export const metadata = metadadosDaPagina('/contato');
 
 export default function ContatoPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-300 py-16 px-6 font-sans">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(jsonLdDaPagina('/contato')) }} />
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="inline-flex items-center text-indigo-400 hover:text-indigo-300 mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -138,7 +136,7 @@ export default function ContatoPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="empresa" className="text-sm font-medium text-gray-300">Nome da Sua Empresa / Ramo <span className="text-gray-500 text-xs font-normal">(Opcional)</span></label>
+                    <label htmlFor="empresa" className="text-sm font-medium text-gray-300">Nome da Sua Empresa / Ramo <span className="text-gray-400 text-xs font-normal">(Opcional)</span></label>
                     <input 
                       type="text" 
                       id="empresa"

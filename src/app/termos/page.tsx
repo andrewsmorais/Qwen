@@ -1,16 +1,14 @@
 ﻿import { Header } from '@/components/Header';
+import { jsonLdDaPagina, jsonLdSeguro, metadadosDaPagina } from '@/lib/seo/site';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export const metadata = {
-  title: 'Termos de Uso',
-  alternates: { canonical: '/termos' },
-  description: 'Termos de Uso e Condições de Serviço do ChatAI Online',
-};
+export const metadata = metadadosDaPagina('/termos');
 
 export default function TermosPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(jsonLdDaPagina('/termos')) }} />
       <Header />
     <div className="min-h-screen pt-24 bg-white text-slate-700 py-16 px-6 font-sans">
       <div className="max-w-4xl mx-auto">

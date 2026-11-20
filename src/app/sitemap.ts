@@ -4,6 +4,7 @@ import { SITE } from "@/lib/seo/site";
 /** `/sitemap.xml` — as páginas públicas, com a data da última mudança de conteúdo. */
 export default function sitemap(): MetadataRoute.Sitemap {
   return SITE.paginas.map((p) => ({
+    // A home sem barra no fim: é como o Next imprime o canonical dela.
     url: `${SITE.url}${p.caminho === "/" ? "" : p.caminho}`,
     lastModified: SITE.ultimaAtualizacao,
     changeFrequency: p.caminho === "/" ? "weekly" : "monthly",

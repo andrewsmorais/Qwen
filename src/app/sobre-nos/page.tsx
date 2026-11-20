@@ -1,16 +1,14 @@
 import Link from 'next/link';
+import { jsonLdDaPagina, jsonLdSeguro, metadadosDaPagina } from '@/lib/seo/site';
 import { ArrowLeft } from 'lucide-react';
 import { SEGMENTOS } from '@/lib/oferta';
 
-export const metadata = {
-  title: 'Sobre o ChatAI Online',
-  alternates: { canonical: '/sobre-nos' },
-  description: 'Conheça mais sobre o ChatAI Online e nossa missão',
-};
+export const metadata = metadadosDaPagina('/sobre-nos');
 
 export default function SobrePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-300 py-16 px-6 font-sans">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(jsonLdDaPagina('/sobre-nos')) }} />
       <div className="max-w-4xl mx-auto">
         <Link href="/" className="inline-flex items-center text-indigo-400 hover:text-indigo-300 mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />

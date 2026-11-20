@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckoutModal } from "./checkout/CheckoutModal";
 import { PLANOS, selecionarPlano, type Plano, type Ciclo } from "@/lib/planos";
 import { CARDS, EXTRAS_A_PARTE, SO_NO_CHATAI } from "@/lib/oferta";
+import { TesteONossoAgente } from "./TesteONossoAgente";
 
 /**
  * Cards de planos — a MESMA promessa que o CRM libera
@@ -58,9 +59,10 @@ export function Pricing() {
       id="precos"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <TesteONossoAgente />
         <div className="mb-14 text-center">
           <h2 className="mb-8 text-3xl font-bold tracking-tight text-white md:text-5xl">
-            Planos para transformar
+            Planos para transformar{" "}
             <br />
             conversas em crescimento
           </h2>

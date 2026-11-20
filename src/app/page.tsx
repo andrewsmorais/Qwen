@@ -1,7 +1,7 @@
 ﻿import Link from "next/link";
 import { Pricing } from "@/components/Pricing";
 import { Header } from "@/components/Header";
-import { CRM_URL } from "@/lib/urls";
+import { CRM_URL, linkDoWhatsapp } from "@/lib/urls";
 import { PERGUNTAS_FREQUENTES } from "@/lib/oferta";
 import { SITE, jsonLdPaginaInicial, jsonLdPerguntas, jsonLdProduto, jsonLdSeguro } from "@/lib/seo/site";
 import type { Metadata } from "next";
@@ -48,16 +48,18 @@ export default function Home() {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-8 items-center">
               {/* Left Column - Text */}
               <div className="lg:col-span-7 relative z-10 max-w-none lg:max-w-[110%]">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-6 md:mb-8 backdrop-blur-sm">
-                  CRM + Agente de Vendas
-                </div>
-                
+                {/* O selo faz parte do H1: é ele que diz ao Google e às IAs O QUE é o
+                    produto ("CRM com IA para WhatsApp"); a frase grande diz o benefício. */}
                 <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-[4rem] font-bold tracking-tight mb-4 md:mb-6 leading-[1.15] text-white">
+                  <span className="flex w-fit items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-xs font-semibold uppercase tracking-wider leading-normal mb-6 md:mb-8 backdrop-blur-sm">
+                    CRM com IA para WhatsApp
+                  </span>
+                  <span className="sr-only">: </span>
                   Transforme conversas no WhatsApp em <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">faturamento todos os dias.</span>
                 </h1>
                 
                 <p className="text-sm sm:text-base md:text-lg text-indigo-100/70 mb-6 md:mb-8 leading-relaxed max-w-2xl">
-                  Atenda centenas de clientes simultaneamente sem fila de espera. Nossa IA negocia com a voz da sua marca e conduz o cliente direto até o fechamento da compra.
+                  O ChatAI Online é um CRM com agente de IA e chatbot para o WhatsApp. Atenda centenas de clientes ao mesmo tempo, sem fila de espera: a IA conversa com a voz da sua marca e conduz o cliente até o fechamento da compra.
                 </p>
                 
                 {/* Botão desktop */}
@@ -115,7 +117,7 @@ export default function Home() {
                    </div>
                    <div className="bg-[#d9fdd3] p-3 rounded-2xl rounded-tr-sm shadow-sm w-[85%] ml-auto relative mt-6 border border-[#c8f0c2]">
                       <p className="text-sm text-slate-800 font-medium">Olá! Como posso ajudar você agora?</p>
-                      <div className="text-[10px] text-emerald-700/70 text-right mt-1.5 font-medium">03:14 AM ✓✓</div>
+                      <div className="text-[10px] text-emerald-800 text-right mt-1.5 font-medium">03:14 AM ✓✓</div>
                    </div>
                 </div>
               </div>
@@ -131,11 +133,11 @@ export default function Home() {
                 <div className="h-40 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col items-center justify-center p-5 relative overflow-hidden space-y-4 mt-auto">
                    <div className="flex gap-3">
                       <div className="bg-white border border-slate-200 text-slate-600 shadow-sm text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-2">
-                         <div className="w-4 h-4 rounded bg-red-100 flex items-center justify-center text-[8px] font-bold text-red-600">PDF</div>
+                         <div className="w-4 h-4 rounded bg-red-100 flex items-center justify-center text-[8px] font-bold text-red-800">PDF</div>
                          catalogo.pdf
                       </div>
                       <div className="bg-white border border-slate-200 text-slate-600 shadow-sm text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-2">
-                         <div className="w-4 h-4 rounded bg-green-100 flex items-center justify-center text-[8px] font-bold text-green-600">XLS</div>
+                         <div className="w-4 h-4 rounded bg-green-100 flex items-center justify-center text-[8px] font-bold text-green-800">XLS</div>
                          precos.xlsx
                       </div>
                    </div>
@@ -558,7 +560,7 @@ export default function Home() {
                </div>
                
                <div>
-                  <h3 className="font-semibold text-slate-900 mb-4">Produto</h3>
+                  <p className="font-semibold text-slate-900 mb-4">Produto</p>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="#produto" className="hover:text-indigo-600 transition-colors">Funcionalidades</Link></li>
                      <li><Link href="#integracoes" className="hover:text-indigo-600 transition-colors">Integrações</Link></li>
@@ -567,7 +569,7 @@ export default function Home() {
                </div>
 
                <div>
-                  <h3 className="font-semibold text-slate-900 mb-4">Empresa</h3>
+                  <p className="font-semibold text-slate-900 mb-4">Empresa</p>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="/sobre-nos" className="hover:text-indigo-600 transition-colors">Sobre nós</Link></li>
                      <li><Link href="/contato" className="hover:text-indigo-600 transition-colors">Contato</Link></li>
@@ -575,7 +577,7 @@ export default function Home() {
                </div>
 
                <div>
-                  <h3 className="font-semibold text-slate-900 mb-4">Legal</h3>
+                  <p className="font-semibold text-slate-900 mb-4">Legal</p>
                   <ul className="space-y-3 text-sm">
                      <li><Link href="/termos" className="hover:text-indigo-600 transition-colors">Termos de Uso</Link></li>
                      <li><Link href="/privacidade" className="hover:text-indigo-600 transition-colors">Política de Privacidade</Link></li>
@@ -608,7 +610,8 @@ export default function Home() {
 
       {/* Floating WhatsApp Button */}
       <a 
-         href="https://wa.me/5512991842793?text=Ol%C3%A1!%20Vi%20o%20site%20do%20ChatAI%20Online%20e%20quero%20saber%20mais!" 
+         href={linkDoWhatsapp("Olá! Vi o site do ChatAI Online e quero saber mais!")}
+         aria-label="Falar com a equipe pelo WhatsApp" 
          target="_blank" 
          rel="noopener noreferrer" 
          className="fixed bottom-6 right-6 z-[999] group flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform"
