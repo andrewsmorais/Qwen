@@ -505,11 +505,20 @@ export default function Home() {
                     ],
                  },
                  {
-                    grupo: 'Anúncios e outras ferramentas',
-                    nota: 'Saiba qual campanha trouxe cada cliente',
+                    grupo: 'Anúncios',
+                    nota: 'Veja qual campanha trouxe cada cliente e quantos compraram',
                     itens: [
-                       { name: 'Meta', domain: 'meta.com', faz: 'Conversões dos anúncios' },
-                       { name: 'Google Ads', domain: 'ads.google.com', faz: 'Conversões dos anúncios' },
+                       { name: 'Meta Ads', domain: 'meta.com', faz: 'Vendas por campanha e conversões' },
+                       { name: 'Google Ads', domain: 'ads.google.com', faz: 'Vendas por campanha e conversões' },
+                       { name: 'TikTok Ads', domain: 'tiktok.com', faz: 'Vendas por campanha' },
+                       { name: 'Pinterest Ads', domain: 'pinterest.com', faz: 'Vendas por campanha' },
+                       { name: 'Taboola', domain: 'taboola.com', faz: 'Vendas por campanha' },
+                    ],
+                 },
+                 {
+                    grupo: 'Outras ferramentas',
+                    nota: 'Leads de qualquer sistema',
+                    itens: [
                        { name: 'RD Station', domain: 'rdstation.com', faz: 'Leads' },
                        { name: 'Zapier', domain: 'zapier.com', faz: 'Make, n8n e API' },
                     ],

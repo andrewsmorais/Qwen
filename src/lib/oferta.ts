@@ -186,8 +186,8 @@ export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [
    a: "Sim, em todos os planos. Você cola o endereço do ChatAI na tela de webhooks da sua loja, e cada carrinho abandonado, Pix ou boleto gerado e pedido pago entra sozinho no CRM, com o produto, o valor e o link do checkout. Um follow-up chama o cliente no WhatsApp para recuperar a venda: no Essencial, com mensagem pronta; a partir do Impulso, também com a mensagem escrita pela IA. Kiwify, Hotmart e Cakto, que são plataformas de pagamento e de afiliados, se conectam do mesmo jeito, pelo webhook. A Nuvemshop está em breve."
  },
  {
-   q: "Dá para saber qual campanha do Facebook ou do Google trouxe a venda?",
-   a: "Sim. Quem chega por um anúncio de clique para o WhatsApp, ou pelo link rastreável do ChatAI, fica com a campanha guardada no contato. Quando o negócio é marcado como ganho, por você ou pelo agente de IA, a venda é devolvida para a Meta e para o Google Ads como conversão, e o anúncio passa a otimizar para quem compra."
+   q: "Dá para saber qual campanha do Facebook, Google, TikTok, Pinterest ou Taboola trouxe a venda?",
+   a: "Sim. Quem chega por um anúncio de clique para o WhatsApp, ou pelo link rastreável do ChatAI, fica com a campanha guardada no contato, e a tela Vendas por campanha mostra, para cada campanha, quantas pessoas chegaram, quantas avançaram no funil, quantas compraram e quanto faturou. Na Meta e no Google Ads, a venda ganha também volta para o anúncio como conversão, e ele passa a otimizar para quem compra."
 },
 {
    q: "O Agente consegue atender em outros idiomas?",
