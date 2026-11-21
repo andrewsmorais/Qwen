@@ -187,7 +187,7 @@ export const PERGUNTAS_FREQUENTES: { q: string; a: string }[] = [
  },
  {
    q: "Dá para saber qual campanha do Facebook, Google, TikTok, Pinterest ou Taboola trouxe a venda?",
-   a: "Sim. Quem chega por um anúncio de clique para o WhatsApp, ou pelo link rastreável do ChatAI, fica com a campanha guardada no contato, e a tela Vendas por campanha mostra, para cada campanha, quantas pessoas chegaram, quantas avançaram no funil, quantas compraram e quanto faturou. Na Meta e no Google Ads, a venda ganha também volta para o anúncio como conversão, e ele passa a otimizar para quem compra."
+   a: "Sim. Quem chega por um anúncio de clique para o WhatsApp, ou pelo link rastreável do ChatAI, fica com a campanha guardada no contato, e a tela Vendas por campanha mostra, para cada campanha, quantas pessoas chegaram, quantas avançaram no funil, quantas compraram e quanto faturou. A venda ganha também volta para o pixel da Meta, do Google Ads, do TikTok, do Pinterest e do Taboola como conversão, e o anúncio passa a otimizar para quem compra."
 },
 {
    q: "O Agente consegue atender em outros idiomas?",

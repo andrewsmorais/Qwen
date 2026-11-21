@@ -348,7 +348,7 @@ export default function Home() {
                      {[
                         "Follow-up automático com quem já conversou com você, sem disparo em massa",
                         "Múltiplos atendentes humanos no mesmo número com agente AI",
-                        "Relatórios avançados e métricas de conversão, com a venda devolvida aos anúncios da Meta e do Google Ads",
+                        "Relatórios avançados e métricas de conversão, com a venda devolvida aos anúncios da Meta, Google Ads, TikTok, Pinterest e Taboola",
                         "Tags, etiquetas e organização visual em Kanban (Funil)",
                         "Integração com Shopify, Yampi, CartPanda, WooCommerce e Wix: carrinho abandonado e Pix gerado viram recuperação no WhatsApp"
                      ].map((item, i) => (
@@ -470,7 +470,7 @@ export default function Home() {
                     },
                     {
                        t: 'Venda paga e campanha',
-                       d: 'O pedido pago move o negócio no funil. Com a venda marcada como ganha, ela volta para o anúncio da Meta ou do Google que trouxe o cliente.',
+                       d: 'O pedido pago move o negócio no funil. Com a venda marcada como ganha, ela volta para o anúncio da Meta, Google, TikTok, Pinterest ou Taboola que trouxe o cliente.',
                     },
                  ].map((item) => (
                     <div key={item.t} className="rounded-xl border border-white/10 bg-white/5 p-5">
@@ -510,9 +510,9 @@ export default function Home() {
                     itens: [
                        { name: 'Meta Ads', domain: 'meta.com', faz: 'Vendas por campanha e conversões' },
                        { name: 'Google Ads', domain: 'ads.google.com', faz: 'Vendas por campanha e conversões' },
-                       { name: 'TikTok Ads', domain: 'tiktok.com', faz: 'Vendas por campanha' },
-                       { name: 'Pinterest Ads', domain: 'pinterest.com', faz: 'Vendas por campanha' },
-                       { name: 'Taboola', domain: 'taboola.com', faz: 'Vendas por campanha' },
+                       { name: 'TikTok Ads', domain: 'tiktok.com', faz: 'Vendas por campanha e conversões' },
+                       { name: 'Pinterest Ads', domain: 'pinterest.com', faz: 'Vendas por campanha e conversões' },
+                       { name: 'Taboola', domain: 'taboola.com', faz: 'Vendas por campanha e conversões' },
                     ],
                  },
                  {
